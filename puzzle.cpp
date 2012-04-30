@@ -5,6 +5,10 @@
 #include <map>
 using namespace std;
 
+#define SWAP(a,b)   { char tmp = (a); (a) = (b); (b) = tmp; }
+
+#define STRI(index) ((index)-1)
+
 #define GO_PRE      cfg = orig_cfg;
 
 #define GO_POS      /* check if i already was there */ \
@@ -12,7 +16,7 @@ using namespace std;
 					{ \
 						visited[cfg.first] = true; \
 						/* check if it is solved */ \
-						if(cfg.first == 123456789ULL) \
+						if(isSolved(cfg.first)) \
 						{ \
 							solution = cfg.second; \
 							return; \
@@ -21,35 +25,23 @@ using namespace std;
 					}
 
 #define GO_LEFT		GO_PRE \
-					digit = (cfg.first % multipliers[empty-1]) / multipliers[empty]; \
-					tmp = cfg.first % multipliers[empty]; \
-					cfg.first = (((cfg.first / multipliers[empty-1]) * 10 + 9) * 10 + digit) * multipliers[empty+1] + (tmp % multipliers[empty+1]); \
+					SWAP(cfg.first[STRI(empty)],cfg.first[STRI(empty-1)]) \
 					cfg.second.push_back(empty-1); \
 					GO_POS
 
 #define GO_RIGHT	GO_PRE \
-					digit = (cfg.first % multipliers[empty+1]) / multipliers[empty+2]; \
-					tmp = cfg.first % multipliers[empty+1]; \
-					cfg.first = (((cfg.first / multipliers[empty]) * 10 + digit) * 10 + 9) * multipliers[empty+2] + (tmp % multipliers[empty+2]); \
+					SWAP(cfg.first[STRI(empty)],cfg.first[STRI(empty+1)]) \
 					cfg.second.push_back(empty+1); \
 					GO_POS
 
 #define GO_DOWN		GO_PRE \
-					digit = (cfg.first % multipliers[empty+3]) / multipliers[empty+4]; \
-					tmp = cfg.first % multipliers[empty+1]; \
-					cfg.first = ((cfg.first / multipliers[empty]) * 10 + digit) * multipliers[empty+1] + tmp; \
-					tmp = cfg.first % multipliers[empty+4]; \
-					cfg.first = ((cfg.first / multipliers[empty+3]) * 10 + 9) * multipliers[empty+4] + tmp; \
-					cfg.second.push_back(empty+3); \
+					SWAP(cfg.first[STRI(empty)],cfg.first[STRI(empty+cols)]) \
+					cfg.second.push_back(empty+cols); \
 					GO_POS
 
 #define GO_UP		GO_PRE \
-					digit = (cfg.first % multipliers[empty-3]) / multipliers[empty-2]; \
-					tmp = cfg.first % multipliers[empty-2]; \
-					cfg.first = ((cfg.first / multipliers[empty-3]) * 10 + 9) * multipliers[empty-2] + tmp; \
-					tmp = cfg.first % multipliers[empty+1]; \
-					cfg.first = ((cfg.first / multipliers[empty]) * 10 + digit) * multipliers[empty+1] + tmp; \
-					cfg.second.push_back(empty-3); \
+					SWAP(cfg.first[STRI(empty)],cfg.first[STRI(empty-cols)]) \
+					cfg.second.push_back(empty-cols); \
 					GO_POS
 
 // ================================================================ //
@@ -64,27 +56,29 @@ using namespace std;
 
 typedef unsigned char byte;
 
-void findSolution(unsigned long long tiles, vector<byte> &solution);
+void findSolution(const char *tiles, int rows, int cols, vector<byte> &solution);
+bool isSolved(const string &board);
 
 int main()
 {
 	//
 	// Load board configuration
-	unsigned long long tiles = 0, input;
+	int rows, cols, input;
+	cout << "What are the dimensions of the puzzle board?\nRows: ";
+	cin >> rows;
+	cout << "Columns: ";
+	cin >> cols;
+	char *tiles = new char[rows*cols+1];
 	cout << "What is the configuration of the puzzle board? \n1 2 3\n4 5 6\n7 8 9\n\n";
-	for(int i = 0; i < 3; i++)
-	{
-		for(int j = 0; j < 3; j++)
-		{
-			cin >> input;
-			tiles = tiles*10 + input;
-		}
-	}
+	for(int i = 0; i < rows; i++)
+		for(int j = 0; j < cols; j++)
+			{ cin >> input; tiles[i*cols+j] = input; }
+	tiles[rows*cols] = 0;
 	//
 	// Find solution
 	cout << "Solving the puzzle...";
 	vector<byte> solution;
-	findSolution(tiles, solution);
+	findSolution(tiles, rows, cols, solution);
 	cout << "done.\n";
 	//
 	// Print the solution
@@ -96,38 +90,51 @@ int main()
 	return 0;
 }
 
-void findSolution(unsigned long long tiles, vector<byte> &solution)
+void findSolution(const char *tiles, int rows, int cols, vector<byte> &solution)
 {
-	queue<pair<unsigned long long, vector<byte> > > q;
-	map<unsigned long long, bool> visited;
-	pair<unsigned long long, vector<byte> > cfg, orig_cfg;
-	unsigned long long digit, tmp;
-	byte empty;
+	queue<pair<string, vector<byte> > > q;		// board state, vector of moves to get there
+	map<string, bool> visited;					// board state, (not)visited
+	pair<string, vector<byte> > cfg, orig_cfg;	// board state, vector of moves to get there
+	byte empty, row, col;									// empty field on the board
 	//
-	q.push(make_pair(tiles,vector<byte>()));
-	q.front().second.push_back(9);
+	// insert the initial state
+	q.push(make_pair(string(tiles),vector<byte>()));
+	q.front().second.push_back(rows*cols);
 	//
-	unsigned long long multipliers[11] = { 10000000000ULL,
-											1000000000ULL, 100000000ULL, 10000000ULL,
-											   1000000ULL,    100000ULL,    10000ULL,
-											      1000ULL,       100ULL,       10ULL,
-										             1ULL };
-	//
+	// go through other states
 	while(!q.empty())
 	{
 		orig_cfg = cfg = q.front(); q.pop();
 		// try a new configuration
-		switch(empty = cfg.second.back())	// last command == empty field
+		empty = cfg.second.back();	// last command == empty field
+		row = ((empty-1) / cols) + 1;
+		col = ((empty-1) % cols) + 1;
+		//
+		if(col == 1)
 		{
-			case 1:          GO_RIGHT;        GO_DOWN; break;
-			case 2: GO_LEFT; GO_RIGHT;        GO_DOWN; break;
-			case 3: GO_LEFT;                  GO_DOWN; break;
-			case 4:          GO_RIGHT; GO_UP; GO_DOWN; break;
-			case 5: GO_LEFT; GO_RIGHT; GO_UP; GO_DOWN; break;
-			case 6: GO_LEFT;           GO_UP; GO_DOWN; break;
-			case 7:          GO_RIGHT; GO_UP;          break;
-			case 8: GO_LEFT; GO_RIGHT; GO_UP;          break;
-			case 9: GO_LEFT;           GO_UP;          break;
+			     if(row == 1   ) { GO_RIGHT; GO_DOWN; }
+			else if(row == rows) { GO_RIGHT; GO_UP  ; }
+			else                 { GO_RIGHT; GO_DOWN; GO_UP; }
 		}
+		else if(col == cols)
+		{
+			     if(row == 1   ) { GO_LEFT; GO_DOWN; }
+			else if(row == rows) { GO_LEFT; GO_UP  ; }
+			else                 { GO_LEFT; GO_DOWN; GO_UP; }
+		}
+		else if(row == 1)		// cols boundaries was already resolved in the first 2 conditions
+			{ GO_DOWN; GO_LEFT; GO_RIGHT; }
+		else if(row == rows)	// cols boundaries was already resolved in the first 2 conditions
+			{ GO_UP  ; GO_LEFT; GO_RIGHT; }
+		else	// can go enywhere :)
+			{ GO_UP  ; GO_LEFT; GO_RIGHT; GO_DOWN; }
 	}
+}
+
+bool isSolved(const string &board)
+{
+	for(size_t i = board.length()-1; i > 0; --i)
+		if(board[i] != (board[i-1]+1))
+			return false;
+	return true;
 }

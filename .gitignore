@@ -1,3 +1,5 @@
+*.opensdf
+media
 ipch
 Debug
 Release
