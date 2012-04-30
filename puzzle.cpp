@@ -15,13 +15,13 @@ using namespace std;
 					if(visited.find(cfg.first) == visited.end()) \
 					{ \
 						visited[cfg.first] = true; \
+						q.push(make_pair(h = fnH(cfg.first, rows, cols), cfg)); \
 						/* check if it is solved */ \
-						if(isSolved(cfg.first)) \
+						if(h == 0/*isSolved(cfg.first)*/) \
 						{ \
 							solution = cfg.second; \
 							return; \
 						} \
-						q.push(cfg); \
 					}
 
 #define GO_LEFT		GO_PRE \
@@ -58,6 +58,7 @@ typedef unsigned char byte;
 
 void findSolution(const char *tiles, int rows, int cols, vector<byte> &solution);
 bool isSolved(const string &board);
+int fnH(const string &board, int rows, int cols);	// heuristic function
 
 int main()
 {
@@ -90,21 +91,33 @@ int main()
 	return 0;
 }
 
+class CompareH
+{
+	public:
+		bool operator()(pair<int, pair<string, vector<byte> > > &a, pair<int, pair<string, vector<byte> > > &b)
+		{
+			if(b.second.second.size() < a.second.second.size()) return true;
+			if(b.second.second.size() > a.second.second.size()) return false;
+			/* == */ return (b.first < a.first);
+		}
+};
+
 void findSolution(const char *tiles, int rows, int cols, vector<byte> &solution)
 {
-	queue<pair<string, vector<byte> > > q;		// board state, vector of moves to get there
+	priority_queue<pair<int, pair<string, vector<byte> > >, vector<pair<int, pair<string, vector<byte> > > >, CompareH > q;		// board state, vector of moves to get there
 	map<string, bool> visited;					// board state, (not)visited
 	pair<string, vector<byte> > cfg, orig_cfg;	// board state, vector of moves to get there
-	byte empty, row, col;									// empty field on the board
+	byte empty, row, col;						// empty field on the board
+	int h;
 	//
 	// insert the initial state
-	q.push(make_pair(string(tiles),vector<byte>()));
-	q.front().second.push_back(rows*cols);
+	q.push(make_pair(fnH(string(tiles), rows, cols), make_pair(string(tiles),vector<byte>())));
+	q.top().second.second.push_back(rows*cols);
 	//
 	// go through other states
 	while(!q.empty())
 	{
-		orig_cfg = cfg = q.front(); q.pop();
+		orig_cfg = cfg = q.top().second; q.pop();
 		// try a new configuration
 		empty = cfg.second.back();	// last command == empty field
 		row = ((empty-1) / cols) + 1;
@@ -137,4 +150,35 @@ bool isSolved(const string &board)
 		if(board[i] != (board[i-1]+1))
 			return false;
 	return true;
+}
+
+int fnH(const string &board, int rows, int cols)
+{
+/* event this was not improving heuristic function :( */
+	// Distance to between neighnours of each tile
+	int h = 0;
+	for(int r = 0, rm = rows-1; r < rm; r++)
+	{
+		for(int c = 0, cm = cols-1; c < cm; c++)
+		{
+			h += abs(board[r*cols+c] - board[r*cols+c+1]);		// right
+			h += abs(board[r*cols+c] - board[r*cols+c+cols]);	// down
+		}
+	}
+	return h;
+//
+/* this was not improving heuristic function
+	// Manhattan distance between current tile positions and solution
+	int h = 0, tmp;
+	for(int r = 1; r <= rows; r++)
+	{
+		for(int c = 1; c <= cols; c++)
+		{
+			tmp = board[STRI(r)*cols+STRI(c)];
+			h += abs((((tmp-1) / cols) + 1) - r);
+			h += abs((((tmp-1) % cols) + 1) - c);
+		}
+	}
+	return h;
+*/
 }
