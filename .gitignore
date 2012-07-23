@@ -1,9 +1,0 @@
-qjPuzzleSolver
-*.opensdf
-media
-ipch
-Debug
-Release
-*.sdf
-*.suo
-*.user
