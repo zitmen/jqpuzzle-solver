@@ -154,7 +154,7 @@ bool isSolved(const string &board)
 
 int fnH(const string &board, int rows, int cols)
 {
-/* event this was not improving heuristic function :( */
+/* even this was not improving heuristic function :( */
 	// Distance to between neighnours of each tile
 	int h = 0;
 	for(int r = 0, rm = rows-1; r < rm; r++)
