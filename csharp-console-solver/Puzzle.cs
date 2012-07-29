@@ -108,19 +108,30 @@ namespace csharp_console_solver
 
         static int Heuristic(Board board)
         {
-            //board.Width,board.Height
+            //return MisplacedTilesHeuristic(board);
+            //return ManhattanDistanceHeuristic(board);
+            //return ManhattanDistanceWithLinearConflictHeuristic(board);
+            return PatternDatabaseHeuristic(board);
+        }
+
+        static int PatternDatabaseHeuristic(Board board)
+        {   // Statically-Partitioned Additive Pattern Database Heuristic
+            return patternDB.GetEstimate(board);
+        }
+
+        static int MisplacedTilesHeuristic(Board board)
+        {
             int h = 0;
-            //
-            // Misplaced tiles
-            /*
             for (int i = 0; i < board.Height; i++)
                 for (int j = 0; j < board.Width; j++)
                     if (board.Tiles[i, j] != ((i * board.Width) + (j + 1)))
                         h++;
-            */
-            //
-            // Manhattan distance
-            /*
+            return h;
+        }
+
+        static int ManhattanDistanceHeuristic(Board board)
+        {
+            int h = 0;
             int row, col;
             for (int i = 0; i < board.Height; i++)
             {
@@ -131,7 +142,13 @@ namespace csharp_console_solver
                     h += Math.Abs(row - i) + Math.Abs(col - j);
                 }
             }
-            // + linear conflicts
+            return h;
+        }
+
+        static int ManhattanDistanceWithLinearConflictHeuristic(Board board)
+        {
+            int h = ManhattanDistanceHeuristic(board);
+            int row, col;
             //   --> in rows
             for (int i = 0; i < board.Height; i++)
             {
@@ -144,7 +161,7 @@ namespace csharp_console_solver
                         col = (board.Tiles[i, j] - 1) % board.Width;
                         for (int k = j + 1; k < board.Width; k++)
                         {
-                            if(((board.Tiles[i, k] - 1) / board.Width) == i)    // the same row?
+                            if (((board.Tiles[i, k] - 1) / board.Width) == i)    // the same row?
                             {
                                 if (((board.Tiles[i, k] - 1) % board.Width) < col)    // before the [i,j] tile?
                                     h += 2;
@@ -158,7 +175,7 @@ namespace csharp_console_solver
             {
                 for (int i = 0; i < board.Height; i++)
                 {
-                    col = (board.Tiles[i, j] - 1) % board.Width; 
+                    col = (board.Tiles[i, j] - 1) % board.Width;
                     if (col == j)   // is the tile in it's correct column?
                     {
                         // is there any [k,j] tile from the same column that needs to go before the [i,j] tile?
@@ -174,10 +191,7 @@ namespace csharp_console_solver
                     }
                 }
             }
-            */
             //
-            // Additive Pattern Database
-            h = 54;
             return h;
         }
 

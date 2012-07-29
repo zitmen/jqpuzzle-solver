@@ -2,16 +2,15 @@
 using System.IO;
 using System.Collections.Generic;
 
-// TODO: check the rest and try to generate the DB, then do file-save/load and (de)compress, if necessary
-
 namespace csharp_console_solver
 {
     class PatternDatabase
     {
         private PuzzleType type;
         private int rows, cols, parts;
-        private int[][] partitions; // [partition_index][tile_index] --> negative value = another partition,  values >= 0 = positions (indices) of tiles in hash key
-        private Dictionary<UInt32, int>[] database;
+        private int[][] partitions; // [partition_index][tile_index] --> negative value = another partition,  values >= 0 = positions (indices) of tiles in hash key, value == parts = empty tile
+        private int[] partitioning; // indices into `partitions`
+        private Dictionary<UInt64, int>[] database;
 
         public PatternDatabase(PuzzleType type)
         {
@@ -36,12 +35,12 @@ namespace csharp_console_solver
                 using (BinaryWriter writer = new BinaryWriter(fs))
                 {
                     // Put count
-                    writer.Write(database[dbi].Count.ToString());
+                    writer.Write(database[dbi].Count);
                     // Write pairs
                     foreach (var pair in database[dbi])
                     {
-                        writer.Write(pair.Key.ToString());
-                        writer.Write(pair.Value.ToString());
+                        writer.Write(pair.Key);
+                        writer.Write(pair.Value);
                     }
                 }
             }
@@ -60,7 +59,7 @@ namespace csharp_console_solver
                     // Read in all pairs
                     for (int i = 0; i < count; i++)
                     {
-                        UInt32 key = reader.ReadUInt32();
+                        UInt64 key = reader.ReadUInt64();
                         int value = reader.ReadInt32();
                         database[dbi].Add(key, value);
                     }
@@ -81,8 +80,33 @@ namespace csharp_console_solver
 
         public int GetEstimate(Board board)
         {
-            // TODO: sum of database[partition][miniboard.getKey] or manhattan, if db not defined for the board
-            return int.MaxValue;
+            // ==================================================================================================================================================================== //
+            // note: it could be done all in 1 'double-loop' (index loop inside of the partition loop), but I think it might be faster this way, because I can precompute [row,col] //
+            //       if I wanted to speed it up, I could get rid of the partition loops, because I know that there must be less or equal to 4 partitions                            //
+            // ==================================================================================================================================================================== //
+            UInt64[] hash = new UInt64[parts];
+            for (int partition = 0; partition < parts; partition++)
+                hash[partition] = 0;
+            //
+            int pos, row, col;
+            for (int index = 0, im = board.Width * board.Height; index < im; index++)
+            {
+                row = index / cols;
+                col = index % cols;
+                for (int partition = 0; partition < parts; partition++)
+                {
+                    pos = partitions[partition][board.Tiles[row, col] - 1]; // board.Tiles is 1-based, but PatternDB is all 0-based
+                    if (pos >= 0)  // correct partition?
+                        hash[partition] |= ((UInt64)index) << (pos * 5);   // then save the current index to the default tile position
+                }
+            }
+            //
+            int estimate = 0;
+            for (int partition = 0; partition < parts; partition++)
+                if (database[partition].ContainsKey(hash[partition]))
+                    estimate += database[partition][hash[partition]];
+            //
+            return estimate;
         }
 
         private void InitDatabase()
@@ -94,6 +118,7 @@ namespace csharp_console_solver
                     rows = cols = 3;
                     partitions = new int[][]
                     {
+// CHYBA!! tady by melo bejt 9 parts!! kazda tile je v jednom
                         new int[]
                         {
                             0, 1, 2,
@@ -106,28 +131,35 @@ namespace csharp_console_solver
                 case PuzzleType.PUZZLE_4x4:
                     parts = 3;  // 6-6-3
                     rows = cols = 4;
+                    partitioning = new int[]
+                    {
+                        0, 2, 2, 2,
+                        0, 0, 1, 1,
+                        0, 0, 1, 1,
+                        0, 1, 1, 3
+                    };
                     partitions = new int[][]
                     {
                         new int[]
                         {
-                            0,-1,-1,-1,
-                            1, 2,-1,-1,
-                            3, 4,-1,-1,
-                            5,-1,-1,-1
+                             0,-1,-1,-1,
+                             1, 2,-1,-1,
+                             3, 4,-1,-1,
+                             5,-1,-1, 6
                         },
                         new int[]
                         {
                             -1,-1,-1,-1,
                             -1,-1, 0, 1,
                             -1,-1, 2, 3,
-                            -1, 4, 5,-1
+                            -1, 4, 5, 6
                         },
                         new int[]
                         {
                             -1, 0, 1, 2,
                             -1,-1,-1,-1,
                             -1,-1,-1,-1,
-                            -1,-1,-1,-1
+                            -1,-1,-1, 6
                         }
                     };
                     break;
@@ -135,6 +167,14 @@ namespace csharp_console_solver
                 case PuzzleType.PUZZLE_5x5:
                     parts = 4;  // 6-6-6-6
                     rows = cols = 5;
+                    partitioning = new int[]
+                    {
+                        0, 0, 0, 1, 1,
+                        0, 0, 0, 1, 1,
+                        2, 2, 3, 1, 1,
+                        2, 2, 3, 3, 3,
+                        2, 2, 3, 3, 4
+                    };
                     partitions = new int[][]
                     {
                         new int[]
@@ -143,7 +183,7 @@ namespace csharp_console_solver
                              3, 4, 5,-1,-1,
                             -1,-1,-1,-1,-1,
                             -1,-1,-1,-1,-1,
-                            -1,-1,-1,-1,-1
+                            -1,-1,-1,-1, 6
                         },
                         new int[]
                         {
@@ -151,7 +191,7 @@ namespace csharp_console_solver
                             -1,-1,-1, 2, 3,
                             -1,-1,-1, 4, 5,
                             -1,-1,-1,-1,-1,
-                            -1,-1,-1,-1,-1
+                            -1,-1,-1,-1, 6
                         },
                         new int[]
                         {
@@ -159,7 +199,7 @@ namespace csharp_console_solver
                             -1,-1,-1,-1,-1,
                              0, 1,-1,-1,-1,
                              2, 3,-1,-1,-1,
-                             4, 5,-1,-1,-1
+                             4, 5,-1,-1, 6
                         },
                         new int[]
                         {
@@ -167,7 +207,7 @@ namespace csharp_console_solver
                             -1,-1,-1,-1,-1,
                             -1,-1, 0,-1,-1,
                             -1,-1, 1, 2, 3,
-                            -1,-1, 4, 5,-1
+                            -1,-1, 4, 5, 6
                         }
                     };
                     break;
@@ -176,9 +216,9 @@ namespace csharp_console_solver
                     throw new Exception("Invalid PuzzleType! Supported types are 3x3, 4x4 and 5x5.");
             }
             //
-            database = new Dictionary<UInt32, int>[parts];
+            database = new Dictionary<UInt64, int>[parts];
             for (int p = 0; p < parts; p++)
-                database[p] = new Dictionary<UInt32, int>();
+                database[p] = new Dictionary<UInt64, int>();
         }
 
         private void BreadthFirstSearchGenerator()  // expand all possible states and store the move count estimates (if larger than Manhattan distance)
@@ -191,40 +231,45 @@ namespace csharp_console_solver
                 node = queue.Dequeue();
                 if (node.CanGoLeft())
                 {
-                    if((next = node.MoveLeft()) != null)
-                        if(StoreInDatabase(next))
-                            queue.Enqueue(next);
+                    next = node.MoveLeft();
+                    if(StoreInDatabase(next))
+                        queue.Enqueue(next);
                 }
                 if (node.CanGoRight())
                 {
-                    if ((next = node.MoveRight()) != null)
-                        if (StoreInDatabase(next))
-                            queue.Enqueue(next);
+                    next = node.MoveRight();
+                    if (StoreInDatabase(next))
+                        queue.Enqueue(next);
                 }
                 if (node.CanGoUp())
                 {
-                    if ((next = node.MoveUp()) != null)
-                        if (StoreInDatabase(next))
-                            queue.Enqueue(next);
+                    next = node.MoveUp();
+                    if (StoreInDatabase(next))
+                        queue.Enqueue(next);
                 }
                 if (node.CanGoDown())
                 {
-                    if ((next = node.MoveDown()) != null)
-                        if (StoreInDatabase(next))
-                            queue.Enqueue(next);
+                    next = node.MoveDown();
+                    if (StoreInDatabase(next))
+                        queue.Enqueue(next);
                 }
             }
         }
 
         private bool StoreInDatabase(BFSNode node)
         {
-            UInt32 key = node.GetHashKey();
-            if (!database[node.Partition].ContainsKey(key))
+            UInt64 key;
+            bool stored = false;
+            for (int partition = 0; partition < parts; partition++)
             {
-                database[node.Partition].Add(key, node.Distance);
-                return true;
+                key = node.GetHashKey(partition);
+                if (!database[partition].ContainsKey(key))
+                {
+                    database[partition].Add(key, node.distance[partition]);
+                    stored = true;
+                }
             }
-            return false;
+            return stored;
         }
 
         private class BFSNode
@@ -233,14 +278,11 @@ namespace csharp_console_solver
             private MiniBoard board;
             private int empty_row, empty_col;
             private Direction direction;
-            private int[] distance;
 
-            public int Partition { get; set; }
-            public int Distance { get { return distance[Partition]; } set { distance[Partition] = value; } }
+            public int[] distance { get; set; }
 
             public BFSNode(PatternDatabase db)  // initial state --> the empty tile is in the bottom right corner
             {
-                this.Partition = -1;
                 this.db = db;
                 this.empty_row = db.rows - 1;
                 this.empty_col = db.cols - 1;
@@ -251,7 +293,7 @@ namespace csharp_console_solver
                     this.distance[i] = 0;
             }
 
-            private BFSNode(PatternDatabase db, int partition, MiniBoard board, int empty_row, int empty_col, int[] distance, Direction direction)
+            private BFSNode(PatternDatabase db, MiniBoard board, int empty_row, int empty_col, int[] distance, Direction direction)
             {
                 this.db = db;
                 this.empty_row = empty_row;
@@ -259,33 +301,23 @@ namespace csharp_console_solver
                 this.board = board;
                 this.distance = distance;
                 this.direction = direction;
-                this.Partition = partition;
+                //
+                if (board.Get(4) == 1UL && board.Get(10) == 2UL && board.Get(12) == 3UL)
+                    throw new Exception("THIS IS IT!");
             }
 
-            public UInt32 GetHashKey()
+            public UInt64 GetHashKey(int partition)
             {
-                // max. 5x5 board with partitions of size max. 6 => save 6 positions (0-25) => 6x5b => UInt32
-                UInt32 hash = 0;
+                // max. 5x5 board with partitions of size max. 6 + 1 for empty tile => save 7 positions (0-24) => 7x5b => UInt64
+                UInt64 hash = 0;
                 int pos;
-                for (int index = 0, im = db.partitions[Partition].Length; index < im; index++)
+                for (int index = 0, im = db.rows * db.cols; index < im; index++)
                 {
-                    pos = db.partitions[Partition][board.Get(index)];
-                    if (pos >= 0)  // corrent partition?
-                        hash |= ((UInt32)index) << (pos * 5);   // then save the current index to the default tile position
+                    pos = db.partitions[partition][board.Get(index)];
+                    if (pos >= 0)  // correct partition?
+                        hash |= ((UInt64)index) << (pos * 5);   // then save the current index to the default tile position
                 }
                 return hash;
-            }
-
-            public int Manhattan(int partition) // sum of Manahattan distances of all tiles in the partition (could be generalizes to the whole board)
-            {
-                int h = 0, val;
-                for (int i = 0, im = db.partitions[Partition].Length; i < im; i++)
-                {
-                    val = (int)board.Get(i);
-                    if (db.partitions[Partition][val] >= 0)
-                        h += Math.Abs((i / db.cols) - (val / db.cols)) + Math.Abs((i % db.cols) - (val % db.cols));
-                }
-                return h;
             }
 
             public bool CanGoLeft()
@@ -314,15 +346,9 @@ namespace csharp_console_solver
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index - 1); b.Set(index - 1, b.Get(index)); b.Set(index, tile);
                 int[] dist = (int[])distance.Clone();
-                for (int partition = 0; partition < db.parts; partition++)
-                {
-                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
-                    {
-                        dist[partition] = distance[partition] + 1;
-                        return new BFSNode(db, partition, b, empty_row, empty_col - 1, dist, Direction.LEFT);
-                    }
-                }
-                return null;
+                int partition = db.partitioning[tile];
+                dist[partition] = distance[partition] + 1;
+                return new BFSNode(db, b, empty_row, empty_col - 1, dist, Direction.LEFT);
             }
 
             public BFSNode MoveRight()
@@ -331,15 +357,9 @@ namespace csharp_console_solver
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index + 1); b.Set(index + 1, b.Get(index)); b.Set(index, tile);
                 int[] dist = (int[])distance.Clone();
-                for (int partition = 0; partition < db.parts; partition++)
-                {
-                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
-                    {
-                        dist[partition] = distance[partition] + 1;
-                        return new BFSNode(db, partition, b, empty_row, empty_col + 1, dist, Direction.RIGHT);
-                    }
-                }
-                return null;
+                int partition = db.partitioning[tile];
+                dist[partition] = distance[partition] + 1;
+                return new BFSNode(db, b, empty_row, empty_col + 1, dist, Direction.RIGHT);
             }
 
             public BFSNode MoveUp()
@@ -348,15 +368,9 @@ namespace csharp_console_solver
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index - db.cols); b.Set(index - db.cols, b.Get(index)); b.Set(index, tile);
                 int[] dist = (int[])distance.Clone();
-                for (int partition = 0; partition < db.parts; partition++)
-                {
-                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
-                    {
-                        dist[partition] = distance[partition] + 1;
-                        return new BFSNode(db, partition, b, empty_row - 1, empty_col, dist, Direction.UP);
-                    }
-                }
-                return null;
+                int partition = db.partitioning[tile];
+                dist[partition] = distance[partition] + 1;
+                return new BFSNode(db, b, empty_row - 1, empty_col, dist, Direction.UP);
             }
 
             public BFSNode MoveDown()
@@ -365,15 +379,9 @@ namespace csharp_console_solver
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index + db.cols); b.Set(index + db.cols, b.Get(index)); b.Set(index, tile);
                 int[] dist = (int[])distance.Clone();
-                for (int partition = 0; partition < db.parts; partition++)
-                {
-                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
-                    {
-                        dist[partition] = distance[partition] + 1;
-                        return new BFSNode(db, partition, b, empty_row + 1, empty_col, dist, Direction.DOWN);
-                    }
-                }
-                return null;
+                int partition = db.partitioning[tile];
+                dist[partition] = distance[partition] + 1;
+                return new BFSNode(db, b, empty_row + 1, empty_col, dist, Direction.DOWN);
             }
         }
     }

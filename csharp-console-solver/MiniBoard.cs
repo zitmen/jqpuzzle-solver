@@ -5,8 +5,8 @@ namespace csharp_console_solver
 {
     class MiniBoard // max 5x5 => 25 tiles => 5b/tile
     {
-        private UInt64 b1, b2;
-        private int rows, cols;
+        public int rows, cols;
+        public UInt64 b1, b2;
 
         public MiniBoard(int rows, int cols)
         {
