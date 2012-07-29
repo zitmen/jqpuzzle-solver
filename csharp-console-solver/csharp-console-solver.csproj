@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Board.cs" />
+    <Compile Include="MiniBoard.cs" />
     <Compile Include="PatternDatabase.cs" />
     <Compile Include="Puzzle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
