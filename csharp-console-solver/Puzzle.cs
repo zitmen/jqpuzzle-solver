@@ -16,8 +16,12 @@ namespace csharp_console_solver
 
     class Puzzle 
     {
+        static PatternDatabase patternDB;
+
         static void Main() 
         {
+            Console.WriteLine("Testing PUZZLE 4x4!");
+            Console.WriteLine();
             //
             // Read board configuration from the standard input
             Console.WriteLine("Enter width of the puzzle: ");
@@ -44,6 +48,19 @@ namespace csharp_console_solver
                 for (int j = 0; j < h; j++)
                     Console.Write(string.Format(" {0:d}", board[i,j]));
                 Console.WriteLine();
+            }
+            //
+            // Initialize the Statically-Partitioned Additive Pattern Database Heuristic
+            if (w == 3 && h == 3)
+                patternDB = new PatternDatabase(PuzzleType.PUZZLE_3x3);
+            else if (w == 4 && h == 4)
+                patternDB = new PatternDatabase(PuzzleType.PUZZLE_4x4);
+            else if (w == 5 && h == 5)
+                patternDB = new PatternDatabase(PuzzleType.PUZZLE_5x5);
+            else
+            {
+                Console.WriteLine("Puzzle {0:d}x{1:d} is not supported! Only 3x3, 4x4 and 5x5.", w, h);
+                return;
             }
             //
             // Compute the solution

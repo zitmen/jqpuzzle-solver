@@ -1,7 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 
-// TODO: check if bit operations work properly! then check the rest and try to generate the DB, then do file-save/load and (de)compress, if necessary
+// TODO: check the rest and try to generate the DB, then do file-save/load and (de)compress, if necessary
 
 namespace csharp_console_solver
 {
@@ -15,61 +16,67 @@ namespace csharp_console_solver
         public PatternDatabase(PuzzleType type)
         {
             this.type = type;
+            InitDatabase();
             if (FileExists())
                 LoadFromFile();
             else
             {
-                Generate();
+                BreadthFirstSearchGenerator();  // space-optimization: clean the database: remove all values <= node.Manahattan()
+                                                // -> don't use that, because I want to have all precomputed (it doesn't take so much of space)
                 SaveToFile();
             }
         }
 
-        public void Generate()
+        private void SaveToFile()
         {
-            InitGenerator();
-            //
-            database = new Dictionary<UInt32, int>[parts];
-            for (int p = 0; p < parts; p++)
-                BreadthFirstSearchGenerator(p);
-        }
-
-        public void SaveToFile()
-        {
-            /*
-            // Example Dictionary again
-            Dictionary<string, int> d = new Dictionary<string, int>()
+            for (int dbi = 0; dbi < parts; dbi++)
             {
-                {"cat", 2},
-                {"dog", 1},
-                {"llama", 0},
-                {"iguana", -1}
-            };
-            // Loop over pairs with foreach
-            foreach (KeyValuePair<string, int> pair in d)
-            {
-                Console.WriteLine("{0}, {1}",
-                    pair.Key,
-                    pair.Value);
+                string filename = string.Format("puzzle_{0:d}x{1:d}_p{2:d}.db", rows, cols, dbi);
+                using (FileStream fs = File.OpenWrite(filename))
+                using (BinaryWriter writer = new BinaryWriter(fs))
+                {
+                    // Put count
+                    writer.Write(database[dbi].Count.ToString());
+                    // Write pairs
+                    foreach (var pair in database[dbi])
+                    {
+                        writer.Write(pair.Key.ToString());
+                        writer.Write(pair.Value.ToString());
+                    }
+                }
             }
-            // Use var keyword to enumerate dictionary
-            foreach (var pair in d)
+        }
+
+        private void LoadFromFile()
+        {
+            for (int dbi = 0; dbi < parts; dbi++)
             {
-                Console.WriteLine("{0}, {1}",
-                    pair.Key,
-                    pair.Value);
+                string filename = string.Format("puzzle_{0:d}x{1:d}_p{2:d}.db", rows, cols, dbi);
+                using (FileStream fs = File.OpenRead(filename))
+                using (BinaryReader reader = new BinaryReader(fs))
+                {
+                    // Get count
+                    int count = reader.ReadInt32();
+                    // Read in all pairs
+                    for (int i = 0; i < count; i++)
+                    {
+                        UInt32 key = reader.ReadUInt32();
+                        int value = reader.ReadInt32();
+                        database[dbi].Add(key, value);
+                    }
+                }
             }
-             */
         }
 
-        public void LoadFromFile()
+        private bool FileExists()
         {
-            //if not exists throw new Exception("File does not exist!");
-        }
-
-        public bool FileExists()
-        {
-            //filename=puzzle_NxN_pP.db
-            return false;
+            for (int dbi = 0; dbi < parts; dbi++)
+            {
+                string filename = string.Format("puzzle_{0:d}x{1:d}_p{2:d}.db", rows, cols, dbi);
+                if (!File.Exists(filename))
+                    return false;
+            }
+            return true;
         }
 
         public int GetEstimate(Board board)
@@ -78,7 +85,7 @@ namespace csharp_console_solver
             return int.MaxValue;
         }
 
-        private void InitGenerator()
+        private void InitDatabase()
         {
             switch (type)
             {
@@ -110,17 +117,17 @@ namespace csharp_console_solver
                         },
                         new int[]
                         {
-                            -1, 0, 1, 2,
-                            -1,-1,-1,-1,
-                            -1,-1,-1,-1,
-                            -1,-1,-1,-1
-                        },
-                        new int[]
-                        {
                             -1,-1,-1,-1,
                             -1,-1, 0, 1,
                             -1,-1, 2, 3,
                             -1, 4, 5,-1
+                        },
+                        new int[]
+                        {
+                            -1, 0, 1, 2,
+                            -1,-1,-1,-1,
+                            -1,-1,-1,-1,
+                            -1,-1,-1,-1
                         }
                     };
                     break;
@@ -168,62 +175,91 @@ namespace csharp_console_solver
                 default:
                     throw new Exception("Invalid PuzzleType! Supported types are 3x3, 4x4 and 5x5.");
             }
+            //
+            database = new Dictionary<UInt32, int>[parts];
+            for (int p = 0; p < parts; p++)
+                database[p] = new Dictionary<UInt32, int>();
         }
 
-        private void BreadthFirstSearchGenerator(int partition)  // expand all possible states and store the move count estimates (if larger than Manhattan distance)
+        private void BreadthFirstSearchGenerator()  // expand all possible states and store the move count estimates (if larger than Manhattan distance)
         {
-            BFSNode node;
+            BFSNode node, next;
             Queue<BFSNode> queue = new Queue<BFSNode>();
-            queue.Enqueue(new BFSNode(this, partition));
+            queue.Enqueue(new BFSNode(this));
             while (queue.Count > 0)
             {
                 node = queue.Dequeue();
-                StoreInDatabase(partition, node);
-                //
-                if (node.CanGoLeft()) queue.Enqueue(node.MoveLeft());
-                if (node.CanGoRight()) queue.Enqueue(node.MoveRight());
-                if (node.CanGoUp()) queue.Enqueue(node.MoveUp());
-                if (node.CanGoDown()) queue.Enqueue(node.MoveDown());
+                if (node.CanGoLeft())
+                {
+                    if((next = node.MoveLeft()) != null)
+                        if(StoreInDatabase(next))
+                            queue.Enqueue(next);
+                }
+                if (node.CanGoRight())
+                {
+                    if ((next = node.MoveRight()) != null)
+                        if (StoreInDatabase(next))
+                            queue.Enqueue(next);
+                }
+                if (node.CanGoUp())
+                {
+                    if ((next = node.MoveUp()) != null)
+                        if (StoreInDatabase(next))
+                            queue.Enqueue(next);
+                }
+                if (node.CanGoDown())
+                {
+                    if ((next = node.MoveDown()) != null)
+                        if (StoreInDatabase(next))
+                            queue.Enqueue(next);
+                }
             }
         }
 
-        private void StoreInDatabase(int partition, BFSNode node)
+        private bool StoreInDatabase(BFSNode node)
         {
             UInt32 key = node.GetHashKey();
-            if (!database[partition].ContainsKey(key))
-                if (node.distance > node.Manhattan())
-                    database[partition].Add(key, node.distance);
+            if (!database[node.Partition].ContainsKey(key))
+            {
+                database[node.Partition].Add(key, node.Distance);
+                return true;
+            }
+            return false;
         }
 
         private class BFSNode
         {
             private PatternDatabase db;
-            private int partition;
             private MiniBoard board;
             private int empty_row, empty_col;
             private Direction direction;
-            public int distance { get; set; }
+            private int[] distance;
 
-            public BFSNode(PatternDatabase db, int partition)  // initial state --> the empty tile is in the bottom right corner
+            public int Partition { get; set; }
+            public int Distance { get { return distance[Partition]; } set { distance[Partition] = value; } }
+
+            public BFSNode(PatternDatabase db)  // initial state --> the empty tile is in the bottom right corner
             {
+                this.Partition = -1;
                 this.db = db;
-                this.partition = partition;
-                this.distance = 0;
                 this.empty_row = db.rows - 1;
                 this.empty_col = db.cols - 1;
                 this.direction = Direction.NONE;
                 this.board = new MiniBoard(db.rows, db.cols);
+                this.distance = new int[db.parts];
+                for (int i = 0; i < db.parts; i++)
+                    this.distance[i] = 0;
             }
 
-            private BFSNode(PatternDatabase db, int partition, MiniBoard board, int empty_row, int empty_col, int distance, Direction direction)
+            private BFSNode(PatternDatabase db, int partition, MiniBoard board, int empty_row, int empty_col, int[] distance, Direction direction)
             {
                 this.db = db;
-                this.partition = partition;
                 this.empty_row = empty_row;
                 this.empty_col = empty_col;
                 this.board = board;
                 this.distance = distance;
                 this.direction = direction;
+                this.Partition = partition;
             }
 
             public UInt32 GetHashKey()
@@ -231,22 +267,22 @@ namespace csharp_console_solver
                 // max. 5x5 board with partitions of size max. 6 => save 6 positions (0-25) => 6x5b => UInt32
                 UInt32 hash = 0;
                 int pos;
-                for (int index = 0, im = db.partitions[partition].Length; index < im; index++)
+                for (int index = 0, im = db.partitions[Partition].Length; index < im; index++)
                 {
-                    pos = db.partitions[partition][board.Get(index)];
+                    pos = db.partitions[Partition][board.Get(index)];
                     if (pos >= 0)  // corrent partition?
                         hash |= ((UInt32)index) << (pos * 5);   // then save the current index to the default tile position
                 }
                 return hash;
             }
 
-            public int Manhattan()
+            public int Manhattan(int partition) // sum of Manahattan distances of all tiles in the partition (could be generalizes to the whole board)
             {
                 int h = 0, val;
-                for (int i = 0, im = db.partitions[partition].Length; i < im; i++)
+                for (int i = 0, im = db.partitions[Partition].Length; i < im; i++)
                 {
                     val = (int)board.Get(i);
-                    if (db.partitions[partition][val] >= 0)
+                    if (db.partitions[Partition][val] >= 0)
                         h += Math.Abs((i / db.cols) - (val / db.cols)) + Math.Abs((i % db.cols) - (val % db.cols));
                 }
                 return h;
@@ -277,7 +313,16 @@ namespace csharp_console_solver
                 MiniBoard b = new MiniBoard(board);
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index - 1); b.Set(index - 1, b.Get(index)); b.Set(index, tile);
-                return new BFSNode(db, partition, b, empty_row, empty_col - 1, distance + ((db.partitions[partition][tile] < 0) ? 0 : 1), Direction.LEFT);
+                int[] dist = (int[])distance.Clone();
+                for (int partition = 0; partition < db.parts; partition++)
+                {
+                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
+                    {
+                        dist[partition] = distance[partition] + 1;
+                        return new BFSNode(db, partition, b, empty_row, empty_col - 1, dist, Direction.LEFT);
+                    }
+                }
+                return null;
             }
 
             public BFSNode MoveRight()
@@ -285,7 +330,16 @@ namespace csharp_console_solver
                 MiniBoard b = new MiniBoard(board);
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index + 1); b.Set(index + 1, b.Get(index)); b.Set(index, tile);
-                return new BFSNode(db, partition, b, empty_row, empty_col + 1, distance + ((db.partitions[partition][tile] < 0) ? 0 : 1), Direction.RIGHT);
+                int[] dist = (int[])distance.Clone();
+                for (int partition = 0; partition < db.parts; partition++)
+                {
+                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
+                    {
+                        dist[partition] = distance[partition] + 1;
+                        return new BFSNode(db, partition, b, empty_row, empty_col + 1, dist, Direction.RIGHT);
+                    }
+                }
+                return null;
             }
 
             public BFSNode MoveUp()
@@ -293,7 +347,16 @@ namespace csharp_console_solver
                 MiniBoard b = new MiniBoard(board);
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index - db.cols); b.Set(index - db.cols, b.Get(index)); b.Set(index, tile);
-                return new BFSNode(db, partition, b, empty_row - 1, empty_col, distance + ((db.partitions[partition][tile] < 0) ? 0 : 1), Direction.UP);
+                int[] dist = (int[])distance.Clone();
+                for (int partition = 0; partition < db.parts; partition++)
+                {
+                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
+                    {
+                        dist[partition] = distance[partition] + 1;
+                        return new BFSNode(db, partition, b, empty_row - 1, empty_col, dist, Direction.UP);
+                    }
+                }
+                return null;
             }
 
             public BFSNode MoveDown()
@@ -301,7 +364,16 @@ namespace csharp_console_solver
                 MiniBoard b = new MiniBoard(board);
                 int index = (empty_row * db.cols) + empty_col;
                 UInt64 tile = b.Get(index + db.cols); b.Set(index + db.cols, b.Get(index)); b.Set(index, tile);
-                return new BFSNode(db, partition, b, empty_row + 1, empty_col, distance + ((db.partitions[partition][tile] < 0) ? 0 : 1), Direction.DOWN);
+                int[] dist = (int[])distance.Clone();
+                for (int partition = 0; partition < db.parts; partition++)
+                {
+                    if (db.partitions[partition][tile] >= 0) // only 1 tile moves each step => only 1 distance[partition] will change
+                    {
+                        dist[partition] = distance[partition] + 1;
+                        return new BFSNode(db, partition, b, empty_row + 1, empty_col, dist, Direction.DOWN);
+                    }
+                }
+                return null;
             }
         }
     }
