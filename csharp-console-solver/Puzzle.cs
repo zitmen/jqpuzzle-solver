@@ -3,15 +3,14 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Collections;
 
-// TODO: optimalizace - nahradit alokace a nahradit path=null za path.clear
+// TODO: optimalizace - nahradit alokace a nahradit path=null za path.clear, pouzit MiniBoard
 
 namespace csharp_console_solver
 {
     enum PuzzleType
     {
         PUZZLE_3x3,
-        PUZZLE_4x4,
-        PUZZLE_5x5
+        PUZZLE_4x4
     }
 
     class Puzzle 
@@ -20,9 +19,6 @@ namespace csharp_console_solver
 
         static void Main() 
         {
-            Console.WriteLine("Testing PUZZLE 4x4!");
-            Console.WriteLine();
-            //
             // Read board configuration from the standard input
             Console.WriteLine("Enter width of the puzzle: ");
             int w = int.Parse(Console.ReadLine());
@@ -55,11 +51,9 @@ namespace csharp_console_solver
                 patternDB = new PatternDatabase(PuzzleType.PUZZLE_3x3);
             else if (w == 4 && h == 4)
                 patternDB = new PatternDatabase(PuzzleType.PUZZLE_4x4);
-            else if (w == 5 && h == 5)
-                patternDB = new PatternDatabase(PuzzleType.PUZZLE_5x5);
             else
             {
-                Console.WriteLine("Puzzle {0:d}x{1:d} is not supported! Only 3x3, 4x4 and 5x5.", w, h);
+                Console.WriteLine("Puzzle {0:d}x{1:d} is not supported! Only 3x3 and 4x4.", w, h);
                 return;
             }
             //
