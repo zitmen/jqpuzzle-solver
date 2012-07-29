@@ -1,3 +1,4 @@
 csharp-console-solver/bin
 csharp-console-solver/obj
 csharp-console-solver/*.suo
+csharp-console-solver/*.vsp
