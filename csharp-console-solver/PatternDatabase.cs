@@ -100,7 +100,7 @@ namespace csharp_console_solver
         public int GetEstimate(Board board)
         {
             // 4x4
-            int tile, partition;
+            int tile, partition, estimate = 0;
             UInt32 index = 0;
             //
             for (int i = 0; i < est_hash.Length; i++)
@@ -114,10 +114,13 @@ namespace csharp_console_solver
                     partition = partitioning[tile];
                     if (partition < parts)  // if it is not the empty tile
                         est_hash[partition] |= index << (partitions[partition][tile] * 4);
+                    else  // it is the empty tile --> add the Manahattan distance of the empty tile
+                          //                          (it is required to always get an estimate >= manhattan distance
+                          //                           and the estimate is still admissible, hence it's a good heuristic)
+                        estimate += Math.Abs(row - (board.Height - 1)) + Math.Abs(col - (board.Width - 1));
                 }
             }
             //
-            int estimate = 0;
             for (int i = 0; i < est_hash.Length; i++)
                 estimate += database[i][est_hash[i]];
             //

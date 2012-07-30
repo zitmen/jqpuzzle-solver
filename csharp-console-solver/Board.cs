@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace csharp_console_solver
 {
@@ -129,6 +130,18 @@ namespace csharp_console_solver
         public int MoveCost(Direction move)
         {
             return 1;   // all valid transformations require only a single move
+        }
+
+        public string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < board.GetLength(0); i++)
+            {
+                for (int j = 0; j < board.GetLength(1); j++)
+                    sb.AppendFormat(" {0:d}", board[i, j]);
+                sb.AppendLine();
+            }
+            return sb.ToString();
         }
     }
 }
