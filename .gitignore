@@ -2,6 +2,7 @@ csharp-console-solver/bin
 csharp-console-solver/obj
 csharp-console-solver/*.suo
 csharp-console-solver/*.vsp
+csharp-console-solver/*.user
 csharp-console-solver/TestResults
 csharp-console-solver/MiniBoardTest/bin
 csharp-console-solver/MiniBoardTest/obj
