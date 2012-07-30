@@ -83,9 +83,10 @@ namespace csharp_console_solver
         // # returns (move-sequence or None, new cost limit)
         static Solution DLS(int start_cost, Board board, Solution solution)
         {
-            int minimum_cost = start_cost + Heuristic(board);
+            int h = Heuristic(board);
+            int minimum_cost = start_cost + h;
             if (minimum_cost > solution.cost) return new Solution(null, minimum_cost);
-            if (board.IsGoal()) { solution.solved = true; return solution; }
+            if (h == 0) { solution.solved = true; return solution; }    // `h` must be 0 in the final state!! (+ it is faster then check each tile using the `IsGoal` method)
             //
             int next_cost_limit = int.MaxValue;
             foreach (Direction m in board.Successors(solution.path))

@@ -242,9 +242,13 @@ namespace csharp_console_solver
 
         private void BreadthFirstSearchGenerator(int partition)  // expand all possible states and store the move count estimates (if larger than Manhattan distance)
         {
-            BFSNode node, next;
+            // init - save the final state (solved board)
+            BFSNode node = new BFSNode(this), next = null;
+            for (int p = 0; p < parts; p++)
+                StoreInDatabase(node, p);
+            // run bfs
             Queue<BFSNode> queue = new Queue<BFSNode>();
-            queue.Enqueue(new BFSNode(this));
+            queue.Enqueue(node);
             while (queue.Count > 0)
             {
                 node = queue.Dequeue();
