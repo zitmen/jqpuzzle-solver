@@ -113,10 +113,11 @@ namespace csharp_console_solver
                 {
                     tile = board.Tiles[row, col] - 1;
                     partition = partitioning[tile];
-                    if (partition < parts)  // if it is not the empty tile
+                    if (partition < parts)  // if it is not the empty tile (empty tile must be omitted from heuristics)
+                    {
                         est_hash[partition] |= index << (partitions[partition][tile] * 4);
-                    //
-                    manhattan += Math.Abs(row - (tile / board.Width)) + Math.Abs(col - (tile % board.Width));
+                        manhattan += Math.Abs(row - (tile / board.Width)) + Math.Abs(col - (tile % board.Width));
+                    }
                 }
             }
             //

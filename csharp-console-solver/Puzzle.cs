@@ -17,48 +17,35 @@ namespace csharp_console_solver
 
         static void Main() 
         {
-            // Read board configuration from the standard input
-            Console.WriteLine("Enter width of the puzzle: ");
-            int w = int.Parse(Console.ReadLine());
-            Console.WriteLine("Enter height of the puzzle: ");
-            int h = int.Parse(Console.ReadLine());
-            Console.WriteLine("Enter a configuration of the puzzle in the following format: \n");
-            Console.WriteLine("1 2 3\n4 5 6\n7 8 9\n\n");
+            // Read board dimensions
+            Console.Write("Choose dimensions of the puzzle (type `3` for 3x3 or type `4` 4x4): ");
+            int w = int.Parse(Console.ReadLine()), h = w;
+            PuzzleType type;
+            if (w == 3) type = PuzzleType.PUZZLE_3x3;
+            else if (w == 4) type = PuzzleType.PUZZLE_4x4;
+            else { Console.WriteLine("\nPuzzle {0:d}x{1:d} is not supported! Only 3x3 and 4x4.", w, h); return; }
+            //
+            // Read a board configuration from the standard input
+            Console.WriteLine("\nEnter a configuration of the puzzle in the following format:");
+            Console.WriteLine("  --> 1 2 3 4 5 6 7 8 9");
             int[,] board = new int[w,h];
-            for (int i = 0; i < h; i++)
+            int i = 0;
+            foreach (string str in Regex.Split(Console.ReadLine(), "[ ]+"))
             {
-                int j = 0;
-                foreach (string str in Regex.Split(Console.ReadLine(), "[ ]+"))
-                {
-                    if (str.Trim() == string.Empty) continue;
-                    board[i, j++] = int.Parse(str);
-                    if (j >= w) break;
-                }
+                if (str.Trim() == string.Empty) continue;
+                board[(i / w), (i % w)] = int.Parse(str);
+                if ((++i) >= (w*h)) break;
             }
-            //
-            // Output the board configuration
-            for(int i = 0; i < w; i++)
-            {
-                for (int j = 0; j < h; j++)
-                    Console.Write(string.Format(" {0:d}", board[i,j]));
-                Console.WriteLine();
-            }
-            //
             // Initialize the Statically-Partitioned Additive Pattern Database Heuristic
-            if (w == 3 && h == 3)
-                patternDB = new PatternDatabase(PuzzleType.PUZZLE_3x3);
-            else if (w == 4 && h == 4)
-                patternDB = new PatternDatabase(PuzzleType.PUZZLE_4x4);
-            else
-            {
-                Console.WriteLine("Puzzle {0:d}x{1:d} is not supported! Only 3x3 and 4x4.", w, h);
-                return;
-            }
-            //
+            Console.Write("\nInitializing the Pattern Database...");
+            patternDB = new PatternDatabase(type);
+            Console.WriteLine("done.");
             // Compute the solution
+            Console.Write("\nSolving the puzzle...");
             Solution solution = IDAStar(new Board(board));
+            Console.WriteLine("done.\n");
             solution.PrintPath();
-            Console.WriteLine("Press any key...");
+            Console.WriteLine("\nPress any key to exit...");
             Console.ReadKey();
         }
 
@@ -66,7 +53,6 @@ namespace csharp_console_solver
         static Solution IDAStar(Board board)
         {
             Solution solution = new Solution(null, Heuristic(board));
-            Console.WriteLine("Starting estimate: {0:d}", solution.cost);
             while (true)
             {
                 solution = DLS(0, board, solution);
@@ -117,6 +103,11 @@ namespace csharp_console_solver
                 for (int j = 0; j < board.Width; j++)
                     if (board.Tiles[i, j] != ((i * board.Width) + (j + 1)))
                         h++;
+            //
+            int empty_tile = (board.Height * board.Width) - 1;
+            if (board.Tiles[board.Height - 1, board.Width - 1] != empty_tile)   // empty tile must be omitted from heuristics
+                h--;
+            //
             return h;
         }
 
@@ -124,10 +115,12 @@ namespace csharp_console_solver
         {
             int h = 0;
             int row, col;
+            int empty_tile = (board.Height * board.Width) - 1;
             for (int i = 0; i < board.Height; i++)
             {
                 for (int j = 0; j < board.Width; j++)
                 {
+                    if (board.Tiles[i, j] == empty_tile) continue;  // empty tile must be omitted from heuristics
                     row = (board.Tiles[i, j] - 1) / board.Width;
                     col = (board.Tiles[i, j] - 1) % board.Width;
                     h += Math.Abs(row - i) + Math.Abs(col - j);
@@ -140,11 +133,14 @@ namespace csharp_console_solver
         {
             int h = ManhattanDistanceHeuristic(board);
             int row, col;
+            int empty_tile = (board.Height * board.Width) - 1;
             //   --> in rows
             for (int i = 0; i < board.Height; i++)
             {
                 for (int j = 0; j < board.Width; j++)
                 {
+                    if (board.Tiles[i, j] == empty_tile) continue;  // empty tile must be omitted from heuristics
+                    //
                     row = (board.Tiles[i, j] - 1) / board.Width;
                     if (row == i)   // is the tile in it's correct row?
                     {
@@ -166,6 +162,8 @@ namespace csharp_console_solver
             {
                 for (int i = 0; i < board.Height; i++)
                 {
+                    if (board.Tiles[i, j] == empty_tile) continue;  // empty tile must be omitted from heuristics
+                    //
                     col = (board.Tiles[i, j] - 1) % board.Width;
                     if (col == j)   // is the tile in it's correct column?
                     {
@@ -220,10 +218,15 @@ namespace csharp_console_solver
 
         public void PrintPath()
         {
-            Console.Write("Solution path ({0:d}): ", path.Count);
-            foreach (Direction d in path)
-                Console.Write(d.ToString() + ",");
-            Console.WriteLine();
+            if (path == null)
+                Console.WriteLine("Solution path is empty - no moves!");
+            else
+            {
+                Console.Write("Solution path ({0:d}): ", path.Count);
+                foreach (Direction d in path)
+                    Console.Write(d.ToString() + ",");
+                Console.WriteLine();
+            }
         }
     }
 
