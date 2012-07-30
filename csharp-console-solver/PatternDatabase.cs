@@ -11,6 +11,7 @@ namespace csharp_console_solver
         private int[][] partitions; // [partition_index][tile_index] --> negative value = another partition,  values >= 0 = positions (indices) of tiles in hash key, value == parts = empty tile
         private int[] partitioning; // indices into `partitions`
         private Dictionary<UInt32, int>[] database;
+        private UInt32[] est_hash;
 
         public PatternDatabase(PuzzleType type)
         {
@@ -98,34 +99,27 @@ namespace csharp_console_solver
 
         public int GetEstimate(Board board)
         {
-            // ==================================================================================================================================================================== //
-            // note: it could be done all in 1 'double-loop' (index loop inside of the partition loop), but I think it might be faster this way, because I can precompute [row,col] //
-            //       if I wanted to speed it up, I could get rid of the partition loops, because I know that there must be less or equal to 4 partitions                            //
-            // ==================================================================================================================================================================== //
-            UInt32[] hash = new UInt32[parts];
-            for (int partition = 0; partition < parts; partition++)
-                hash[partition] = 0;
+            // 4x4
+            int tile, partition;
+            UInt32 index = 0;
             //
-            int pos, row, col, tile;
-            for (int index = 0, im = board.Width * board.Height; index < im; index++)
+            for (int i = 0; i < est_hash.Length; i++)
+                est_hash[i] = 0;
+            //
+            for (int row = 0; row < board.Height; row++)
             {
-                row = index / cols;
-                col = index % cols;
-                for (int partition = 0; partition < parts; partition++)
+                for (int col = 0; col < board.Width; col++, index++)
                 {
                     tile = board.Tiles[row, col] - 1;
-                    if (partitioning[tile] == partition)    // correct partition (and not the empty tile)?
-                    {
-                        pos = partitions[partition][tile]; // board.Tiles is 1-based, but PatternDB is all 0-based
-                        hash[partition] |= ((UInt32)index) << (pos * 4);   // then save the current index to the default tile position
-                    }
+                    partition = partitioning[tile];
+                    if (partition < parts)  // if it is not the empty tile
+                        est_hash[partition] |= index << (partitions[partition][tile] * 4);
                 }
             }
             //
             int estimate = 0;
-            for (int partition = 0; partition < parts; partition++)
-                if (database[partition].ContainsKey(hash[partition]))
-                    estimate += database[partition][hash[partition]];
+            for (int i = 0; i < est_hash.Length; i++)
+                estimate += database[i][est_hash[i]];
             //
             return estimate;
         }
@@ -239,6 +233,8 @@ namespace csharp_console_solver
             database = new Dictionary<UInt32, int>[parts];
             for (int p = 0; p < parts; p++)
                 database[p] = new Dictionary<UInt32, int>();
+            //
+            est_hash = new UInt32[parts];
         }
 
         private void BreadthFirstSearchGenerator(int partition)  // expand all possible states and store the move count estimates (if larger than Manhattan distance)

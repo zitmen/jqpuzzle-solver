@@ -103,9 +103,9 @@ namespace csharp_console_solver
         static int Heuristic(Board board)
         {
             //return MisplacedTilesHeuristic(board);
-            return ManhattanDistanceHeuristic(board);
+            //return ManhattanDistanceHeuristic(board);
             //return ManhattanDistanceWithLinearConflictHeuristic(board);
-            //return PatternDatabaseHeuristic(board);
+            return PatternDatabaseHeuristic(board);
         }
 
         static int PatternDatabaseHeuristic(Board board)
