@@ -68,6 +68,7 @@ namespace csharp_console_solver
         static Solution IDAStar(Board board)
         {
             Solution solution = new Solution(null, Heuristic(board));
+            Console.WriteLine("Starting estimate: {0:d}", solution.cost);
             while (true)
             {
                 solution = DLS(0, board, solution);
@@ -75,7 +76,6 @@ namespace csharp_console_solver
                     return solution;
                 else if (solution.cost == int.MaxValue)
                     return null;
-                solution.cost += 1; // celkem += 2, protoze v DLS se inkrementuje o 1
             }
         }
 
@@ -103,9 +103,9 @@ namespace csharp_console_solver
         static int Heuristic(Board board)
         {
             //return MisplacedTilesHeuristic(board);
-            //return ManhattanDistanceHeuristic(board);
+            return ManhattanDistanceHeuristic(board);
             //return ManhattanDistanceWithLinearConflictHeuristic(board);
-            return PatternDatabaseHeuristic(board);
+            //return PatternDatabaseHeuristic(board);
         }
 
         static int PatternDatabaseHeuristic(Board board)

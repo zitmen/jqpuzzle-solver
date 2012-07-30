@@ -33,11 +33,11 @@ namespace csharp_console_solver
 
         private void CleanDatabase(int partition)
         {
-            UInt32 key, mask = ~(((UInt32)15) << (parts * 4));
+            UInt32 key, mask = ~(((UInt32)15) << (partitions[partition][(rows * cols) - 1] * 4));
             Dictionary<UInt32, int> db = new Dictionary<UInt32, int>();
             foreach (var pair in database[partition])
             {   // cancel the empty tile
-                key = ((UInt32)pair.Key) & mask;
+                key = ((UInt32)pair.Key) & mask;    // remove the empty tile position from the hash
                 if (!db.ContainsKey(key)) db.Add(key, pair.Value);
                 else if (db[key] > pair.Value) db[key] = pair.Value;
             }
@@ -106,16 +106,19 @@ namespace csharp_console_solver
             for (int partition = 0; partition < parts; partition++)
                 hash[partition] = 0;
             //
-            int pos, row, col;
+            int pos, row, col, tile;
             for (int index = 0, im = board.Width * board.Height; index < im; index++)
             {
                 row = index / cols;
                 col = index % cols;
                 for (int partition = 0; partition < parts; partition++)
                 {
-                    pos = partitions[partition][board.Tiles[row, col] - 1]; // board.Tiles is 1-based, but PatternDB is all 0-based
-                    if ((pos >= 0) && (pos < parts))  // correct partition (and not the empty tile)?
+                    tile = board.Tiles[row, col] - 1;
+                    if (partitioning[tile] == partition)    // correct partition (and not the empty tile)?
+                    {
+                        pos = partitions[partition][tile]; // board.Tiles is 1-based, but PatternDB is all 0-based
                         hash[partition] |= ((UInt32)index) << (pos * 4);   // then save the current index to the default tile position
+                    }
                 }
             }
             //
@@ -321,7 +324,7 @@ namespace csharp_console_solver
                 for (int index = 0, im = db.rows * db.cols; index < im; index++)
                 {
                     pos = db.partitions[partition][board.Get(index)];
-                    if (pos >= 0)  // correct partition?
+                    if (pos >= 0)  // correct partition? (including the empty tile)
                         hash |= ((UInt32)index) << (pos * 4);   // then save the current index to the default tile position
                 }
                 return hash;
