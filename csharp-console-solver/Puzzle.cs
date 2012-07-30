@@ -3,8 +3,6 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Collections;
 
-// TODO: optimalizace - nahradit alokace a nahradit path=null za path.clear, pouzit MiniBoard
-
 namespace csharp_console_solver
 {
     enum PuzzleType
@@ -72,10 +70,8 @@ namespace csharp_console_solver
             while (true)
             {
                 solution = DLS(0, board, solution);
-                if (solution.solved == true)
+                if ((solution.solved == true) || (solution.cost == int.MaxValue))   // either solved or cannot be solved? yes->stop
                     return solution;
-                else if (solution.cost == int.MaxValue)
-                    return null;
             }
         }
 
@@ -93,7 +89,7 @@ namespace csharp_console_solver
             {
                 int new_start_cost = start_cost + board.MoveCost(m);
                 solution.path = MoveTowards(board, solution.path, m);
-                Solution new_solution = DLS(new_start_cost, board, new Solution(solution.path, solution.cost));
+                Solution new_solution = DLS(new_start_cost, board, solution);
                 if (new_solution.solved == true) return new_solution;
                 solution.path = MoveBackwards(board, solution.path);
                 next_cost_limit = Math.Min(next_cost_limit, new_solution.cost);

@@ -17,19 +17,23 @@ namespace csharp_console_solver
         {
             this.type = type;
             InitDatabase();
-            if (!FileExists())
+            if (type != PuzzleType.PUZZLE_3x3)  // 3x3 puzzle will use online-calculated Manahattan distance,
+                                                // because the lookup time is almost the same and there is no need of PatternDB for puzzle of this size
             {
-                for (int partition = 0; partition < parts; partition++)
+                if (!FileExists())
                 {
-                    BreadthFirstSearchGenerator(partition);
-                    CleanDatabase(partition);   // optional space-optimization: mirror configurations
-                                                // optional space-optimization: clean the database: remove all values <= node.Manahattan()
-                                                // -> don't use that, because I want to have all precomputed (it doesn't take so much of space)
+                    for (int partition = 0; partition < parts; partition++)
+                    {
+                        BreadthFirstSearchGenerator(partition);
+                        CleanDatabase(partition);   // optional space-optimization: mirror configurations
+                        // optional space-optimization: clean the database: remove all values <= node.Manahattan()
+                        // -> don't use that, because I want to have all precomputed (it doesn't take so much of space)
+                    }
+                    SaveToFile();
                 }
-                SaveToFile();
+                else
+                    LoadFromFile();
             }
-            else
-                LoadFromFile();
         }
 
         private void CleanDatabase(int partition)
@@ -47,11 +51,11 @@ namespace csharp_console_solver
 
         private void SaveToFile()
         {
-            for (int dbi = 0; dbi < parts; dbi++)
+            string filename = string.Format("puzzle_{0:d}x{1:d}.db", rows, cols);
+            using (FileStream fs = File.OpenWrite(filename))
+            using (BinaryWriter writer = new BinaryWriter(fs))
             {
-                string filename = string.Format("puzzle_{0:d}x{1:d}_p{2:d}.db", rows, cols, dbi);
-                using (FileStream fs = File.OpenWrite(filename))
-                using (BinaryWriter writer = new BinaryWriter(fs))
+                for (int dbi = 0; dbi < parts; dbi++)
                 {
                     // Put count
                     writer.Write(database[dbi].Count);
@@ -67,11 +71,11 @@ namespace csharp_console_solver
 
         private void LoadFromFile()
         {
-            for (int dbi = 0; dbi < parts; dbi++)
+            string filename = string.Format("puzzle_{0:d}x{1:d}.db", rows, cols);
+            using (FileStream fs = File.OpenRead(filename))
+            using (BinaryReader reader = new BinaryReader(fs))
             {
-                string filename = string.Format("puzzle_{0:d}x{1:d}_p{2:d}.db", rows, cols, dbi);
-                using (FileStream fs = File.OpenRead(filename))
-                using (BinaryReader reader = new BinaryReader(fs))
+                for (int dbi = 0; dbi < parts; dbi++)
                 {
                     // Get count
                     int count = reader.ReadInt32();
@@ -88,20 +92,17 @@ namespace csharp_console_solver
 
         private bool FileExists()
         {
-            for (int dbi = 0; dbi < parts; dbi++)
-            {
-                string filename = string.Format("puzzle_{0:d}x{1:d}_p{2:d}.db", rows, cols, dbi);
-                if (!File.Exists(filename))
-                    return false;
-            }
+            string filename = string.Format("puzzle_{0:d}x{1:d}.db", rows, cols);
+            if (!File.Exists(filename))
+                return false;
             return true;
         }
 
         public int GetEstimate(Board board)
         {
-            // 4x4
-            int tile, partition, estimate = 0;
+            int tile, partition;
             UInt32 index = 0;
+            int manhattan = 0;
             //
             for (int i = 0; i < est_hash.Length; i++)
                 est_hash[i] = 0;
@@ -114,17 +115,18 @@ namespace csharp_console_solver
                     partition = partitioning[tile];
                     if (partition < parts)  // if it is not the empty tile
                         est_hash[partition] |= index << (partitions[partition][tile] * 4);
-                    else  // it is the empty tile --> add the Manahattan distance of the empty tile
-                          //                          (it is required to always get an estimate >= manhattan distance
-                          //                           and the estimate is still admissible, hence it's a good heuristic)
-                        estimate += Math.Abs(row - (board.Height - 1)) + Math.Abs(col - (board.Width - 1));
+                    //
+                    manhattan += Math.Abs(row - (tile / board.Width)) + Math.Abs(col - (tile % board.Width));
                 }
             }
             //
+            int estimate = 0;
             for (int i = 0; i < est_hash.Length; i++)
-                estimate += database[i][est_hash[i]];
-            //
-            return estimate;
+                if(database[i].ContainsKey(est_hash[i]))
+                    estimate += database[i][est_hash[i]];
+            // note: 3x3 puzzles allways use `manhattan`, because `estimate` is always 0, because of the empty database
+            return Math.Max(estimate, manhattan);   // pattern db estimate is always at least as high as manhattan distance, but the pattern db estimate mustn't add the empty tile
+                                                    // -> that's why sometimes the manhattan distance might be slightly higher
         }
 
         private void InitDatabase()
