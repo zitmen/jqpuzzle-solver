@@ -8,8 +8,7 @@ namespace csharp_console_solver
     enum PuzzleType
     {
         PUZZLE_3x3,
-        PUZZLE_4x4,
-        PUZZLE_5x5
+        PUZZLE_4x4
     }
 
     class Puzzle 
@@ -19,13 +18,12 @@ namespace csharp_console_solver
         static void Main()
         {
             // Read board dimensions
-            Console.Write("Choose dimensions of the puzzle (type `3` for 3x3, `4` for 4x4 or `5` for 5x5): ");
+            Console.Write("Choose dimensions of the puzzle (type `3` for 3x3 or `4` for 4x4): ");
             int w = int.Parse(Console.ReadLine()), h = w;
             PuzzleType type;
             if (w == 3) type = PuzzleType.PUZZLE_3x3;
             else if (w == 4) type = PuzzleType.PUZZLE_4x4;
-            else if (w == 5) type = PuzzleType.PUZZLE_5x5;
-            else { Console.WriteLine("\nPuzzle {0:d}x{1:d} is not supported! Only 3x3, 4x4 and 5x5 are supported.", w, h); return; }
+            else { Console.WriteLine("\nPuzzle {0:d}x{1:d} is not supported! Only 3x3 and 4x4 are supported.", w, h); return; }
             //
             // Read a board configuration from the standard input
             Console.WriteLine("\nEnter a configuration of the puzzle in the following format:");
