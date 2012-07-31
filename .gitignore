@@ -6,3 +6,8 @@ csharp-console-solver/*.user
 csharp-console-solver/TestResults
 csharp-console-solver/MiniBoardTest/bin
 csharp-console-solver/MiniBoardTest/obj
+puzzle-recorgnition/bin
+puzzle-recorgnition/obj
+puzzle-recorgnition/*.suo
+puzzle-recorgnition/*.vsp
+puzzle-recorgnition/*.user
