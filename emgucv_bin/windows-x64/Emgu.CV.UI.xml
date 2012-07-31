@@ -172,18 +172,12 @@
             <param name="s2">The second size</param>
             <returns>The minimum of the two sizes</returns>
         </member>
-        <member name="M:Emgu.CV.UI.PanAndZoomPictureBox.DrawReversibleRectangle(System.Drawing.Rectangle)">
+        <member name="M:Emgu.CV.UI.PanAndZoomPictureBox.GetSelectedRectangle(System.Drawing.Point,System.Drawing.Point)">
             <summary>
-            Draw a reversible rectangle on the control.
+            Get the rectangle defined by the two points
             </summary>
-            <param name="rect">The rectangle using the control's coordinate system</param>
-        </member>
-        <member name="M:Emgu.CV.UI.PanAndZoomPictureBox.GetRectangle(System.Drawing.Point,System.Drawing.Point)">
-            <summary>
-            Get the rectangle defined by the two points on the control
-            </summary>
-            <param name="p1">The first point on the control</param>
-            <param name="p2">The second point on the control</param>
+            <param name="p1">The first point</param>
+            <param name="p2">The second point</param>
             <returns>the rectangle defined by the two points</returns>
         </member>
         <member name="M:Emgu.CV.UI.PanAndZoomPictureBox.SetZoomScale(System.Double,System.Drawing.Point)">

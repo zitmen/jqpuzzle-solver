@@ -32,19 +32,8 @@
             <summary>
             Create a binary File Storage with the specific data
             </summary>
-            <param name="fileName">The file name of the storage, all data in the existing file will be replaced</param>
+            <param name="fileName">The file name of the storage</param>
             <param name="samples">The data which will be stored in the storage</param>
-        </member>
-        <member name="M:Emgu.Util.BinaryFileStorage`1.Clear">
-            <summary>
-            Delete all data in the existing storage, if there is any.
-            </summary>
-        </member>
-        <member name="M:Emgu.Util.BinaryFileStorage`1.Append(System.Collections.Generic.IEnumerable{`0})">
-            <summary>
-            Append the samples to the end of the storage
-            </summary>
-            <param name="samples">The samples to be appended to the storage</param>
         </member>
         <member name="M:Emgu.Util.BinaryFileStorage`1.Peek">
             <summary>
@@ -387,7 +376,7 @@
             Decrements the reference count of the loaded dynamic-link library (DLL). When the reference count reaches zero, the module is unmapped from the address space of the calling process and the handle is no longer valid
             </summary>
             <param name="handle">The handle to the library</param>
-            <returns>If the function succeeds, the return value is true. If the function fails, the return value is false.</returns>
+            <returns>If the function succeeds, the return value is nonzero. If the function fails, the return value is zero.</returns>
         </member>
         <member name="M:Emgu.Util.Toolbox.SetDllDirectory(System.String)">
             <summary>
@@ -409,21 +398,6 @@
         <member name="F:Emgu.Util.TypeEnum.OS.Linux">
             <summary>
             Linux
-            </summary>
-        </member>
-        <member name="F:Emgu.Util.TypeEnum.OS.MacOSX">
-            <summary>
-            Mac OSX
-            </summary>
-        </member>
-        <member name="F:Emgu.Util.TypeEnum.OS.IOS">
-            <summary>
-            iOS devices. iPhone, iPad, iPod Touch
-            </summary>
-        </member>
-        <member name="F:Emgu.Util.TypeEnum.OS.Android">
-            <summary>
-            Android devices
             </summary>
         </member>
         <member name="T:Emgu.Util.TypeEnum.Runtime">
