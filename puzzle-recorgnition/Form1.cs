@@ -19,7 +19,9 @@ namespace puzzle_recorgnition
     public partial class Form1 : Form
     {
         int board_size;
-        Image<Bgr, Byte> original, shuffled;
+        Image<Bgr, byte> original, shuffled;
+        ImageFeature[][] tiles;
+        SURFDetector surf;
 
         public Form1()
         {
@@ -30,6 +32,11 @@ namespace puzzle_recorgnition
             //
             shuffled = new Image<Bgr, byte>("puzzle.png");
             pictureBox2.Image = shuffled.ToBitmap();
+            //
+            tiles = null;
+            board_size = 4;
+            //
+            surf = new SURFDetector(500, false);
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
@@ -64,52 +71,71 @@ namespace puzzle_recorgnition
 
         private void button2_Click(object sender, EventArgs e)
         {
-            // 1. aplikuj mrizku board_size*board_size dlazdic
-            // 2. SURF na kazdou dlazdici a klice uloz do ArrayListu [0-9] nebo [0-15]
-            //original.Draw(new Rectangle(0, 0, 10, 10), new Bgr(Color.Red), 2);    // <-- draw grid!!
-            // subregion: Image<TColor, TDepth> GetSubRect(Rectangle rect);
-            // SURF: foreach subregion a nebo rozdelit featury do subregionu...co je lepsi...
-            SURFDetector surf = new SURFDetector(500, false);
-            Image<Gray, byte> original_gray = original.Convert<Gray, byte>();
-            MKeyPoint[] keypoints = surf.DetectKeyPoints(original_gray);    // DetectFeatures? ten to udela rovnou...jakej je rozdil?
-            ImageFeature[] features = surf.ComputeDescriptors(original_gray, keypoints);
-            foreach(ImageFeature feature in features)
-                original.Draw(new CircleF(feature.KeyPoint.Point, 3.0f), new Bgr(Color.Red), 1);
+            tiles = new ImageFeature[board_size * board_size][];
+            Rectangle rect = new Rectangle(0, 0, original.Width / board_size, original.Height / board_size);
+            Image<Gray, byte> tile;
+            //
+            for (int row = 0, index = 0; row < board_size; row++)
+            {
+                for (int col = 0; col < board_size; col++, index++)
+                {
+                    tile = original.GetSubRect(rect).Convert<Gray, byte>();
+                    tiles[index] = surf.DetectFeatures(tile, null);
+                    //
+                    //DenseHistogram hist = new DenseHistogram(256, new RangeF(0.0f, 255.0f));
+                    //hist.Calculate<Byte>(new Image<Gray, byte>[] { img }, true, null);
+                    //
+                    original.Draw(rect, new Bgr(Color.Red), 2);
+                    foreach (ImageFeature feature in tiles[index])
+                        original.Draw(new CircleF(new PointF(feature.KeyPoint.Point.X + rect.X, feature.KeyPoint.Point.Y + rect.Y), 3.0f), new Bgr(Color.Red), 1);
+                    //
+                    rect.Offset(rect.Width, 0);
+                }
+                rect.Offset(-original.Width, rect.Height);
+            }
             //
             pictureBox1.Image = original.ToBitmap();
             pictureBox1.Invalidate();
-            //
-            /*
-            BruteForceMatcher<float> matcher = new BruteForceMatcher<float>(DistanceType.L2);
-            matcher.Add(modelDescriptors);
-            
-            indices = new Matrix<int>(observedDescriptors.Rows, k);
-
-            using (Matrix<float> dist = new Matrix<float>(observedDescriptors.Rows, k))
-            {
-                matcher.KnnMatch(observedDescriptors, indices, dist, k, null);
-                mask = new Matrix<byte>(dist.Rows, 1);
-                mask.SetValue(255);
-                Features2DToolbox.VoteForUniqueness(dist, uniquenessThreshold, mask);
-            }
-
-            int nonZeroCount = CvInvoke.cvCountNonZero(mask);
-            if (nonZeroCount >= 4)
-            {
-                nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, indices, mask, 1.5, 20);
-                if (nonZeroCount >= 4)
-                    homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, indices, mask, 2);
-            }
-            */
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
+            if (tiles == null) { MessageBox.Show("First click on LEARN!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation); return; }
             // 1. SURF na shuffled
+            ImageFeature[] features = surf.DetectFeatures(shuffled.Convert<Gray, byte>(), null);
             // 2. match naucenych dlazdic na obrazek a z pozic vytvorit poradi (result)
             // 3. Write result: textBox1 = "";
+            //
             MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 1.0, 1.0);
-            shuffled.Draw("1", ref font, new Point(50, 50), new Bgr(Color.Red));
+            Rectangle rect = new Rectangle(0, 0, original.Width / board_size, original.Height / board_size);
+            PointF[] pts = new PointF[]
+            { 
+                new PointF(rect.Left, rect.Bottom),
+                new PointF(rect.Right, rect.Bottom),
+                new PointF(rect.Right, rect.Top),
+                new PointF(rect.Left, rect.Top)
+            };
+            //
+            for (int t = 0; t < tiles.Length; t++)
+            {
+                if (tiles[t].Length == 0) continue;
+                Features2DTracker tracker = new Features2DTracker(tiles[t]);
+                Features2DTracker.MatchedImageFeature[] matchedFeatures = tracker.MatchFeature(features, 2, 20);
+                matchedFeatures = Features2DTracker.VoteForUniqueness(matchedFeatures, 0.8);
+                matchedFeatures = Features2DTracker.VoteForSizeAndOrientation(matchedFeatures, 1.5, 20);
+                HomographyMatrix homography = Features2DTracker.GetHomographyMatrixFromMatchedFeatures(matchedFeatures);
+                //
+                if (homography != null)
+                {
+                    homography.ProjectPoints(pts);
+                    for (int i = 0; i < pts.Length; i++)
+                        pts[i].Y += rect.Height;
+                    //
+                    shuffled.DrawPolyline(Array.ConvertAll<PointF, Point>(pts, Point.Round), true, new Bgr(Color.Green), 2);
+                    //shuffled.Draw("1", ref font, new Point(50, 50), new Bgr(Color.Red));
+                }
+            }
+            //
             pictureBox2.Image = shuffled.ToBitmap();
             pictureBox2.Invalidate();
         }
