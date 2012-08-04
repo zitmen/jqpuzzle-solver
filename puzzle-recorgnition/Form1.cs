@@ -11,7 +11,6 @@ using Emgu.Util;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
-using Emgu.CV.Features2D;
 
 namespace puzzle_recorgnition
 {

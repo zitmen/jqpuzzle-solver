@@ -11,3 +11,8 @@ puzzle-recorgnition/obj
 puzzle-recorgnition/*.suo
 puzzle-recorgnition/*.vsp
 puzzle-recorgnition/*.user
+screen-capture/bin
+screen-capture/obj
+screen-capture/*.suo
+screen-capture/*.vsp
+screen-capture/*.user
