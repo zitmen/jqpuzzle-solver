@@ -16,3 +16,8 @@ screen-capture/obj
 screen-capture/*.suo
 screen-capture/*.vsp
 screen-capture/*.user
+jqpuzzle-solver/bin
+jqpuzzle-solver/obj
+jqpuzzle-solver/*.suo
+jqpuzzle-solver/*.vsp
+jqpuzzle-solver/*.user
