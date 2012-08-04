@@ -12,7 +12,6 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Features2D;
-using Emgu.CV.Structure;
 
 namespace puzzle_recorgnition
 {
@@ -20,8 +19,8 @@ namespace puzzle_recorgnition
     {
         int board_size;
         Image<Bgr, byte> original, shuffled;
-        ImageFeature[][] tiles;
-        SURFDetector surf;
+        Image<Gray, byte>[] tiles;
+        int[] board_config;
 
         public Form1()
         {
@@ -35,8 +34,6 @@ namespace puzzle_recorgnition
             //
             tiles = null;
             board_size = 4;
-            //
-            surf = new SURFDetector(500, false);
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
@@ -71,7 +68,10 @@ namespace puzzle_recorgnition
 
         private void button2_Click(object sender, EventArgs e)
         {
-            tiles = new ImageFeature[board_size * board_size][];
+            board_config = new int[board_size * board_size];
+            board_config[board_config.Length - 1] = board_config.Length;
+            //
+            tiles = new Image<Gray, byte>[board_size * board_size];
             Rectangle rect = new Rectangle(0, 0, original.Width / board_size, original.Height / board_size);
             Image<Gray, byte> tile;
             //
@@ -80,14 +80,8 @@ namespace puzzle_recorgnition
                 for (int col = 0; col < board_size; col++, index++)
                 {
                     tile = original.GetSubRect(rect).Convert<Gray, byte>();
-                    tiles[index] = surf.DetectFeatures(tile, null);
-                    //
-                    //DenseHistogram hist = new DenseHistogram(256, new RangeF(0.0f, 255.0f));
-                    //hist.Calculate<Byte>(new Image<Gray, byte>[] { img }, true, null);
-                    //
+                    tiles[index] = tile;
                     original.Draw(rect, new Bgr(Color.Red), 2);
-                    foreach (ImageFeature feature in tiles[index])
-                        original.Draw(new CircleF(new PointF(feature.KeyPoint.Point.X + rect.X, feature.KeyPoint.Point.Y + rect.Y), 3.0f), new Bgr(Color.Red), 1);
                     //
                     rect.Offset(rect.Width, 0);
                 }
@@ -101,43 +95,53 @@ namespace puzzle_recorgnition
         private void button3_Click(object sender, EventArgs e)
         {
             if (tiles == null) { MessageBox.Show("First click on LEARN!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation); return; }
-            // 1. SURF na shuffled
-            ImageFeature[] features = surf.DetectFeatures(shuffled.Convert<Gray, byte>(), null);
-            // 2. match naucenych dlazdic na obrazek a z pozic vytvorit poradi (result)
-            // 3. Write result: textBox1 = "";
+            //
+            double[] tiles_dist = new double[tiles.Length];
             //
             MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 1.0, 1.0);
             Rectangle rect = new Rectangle(0, 0, original.Width / board_size, original.Height / board_size);
-            PointF[] pts = new PointF[]
-            { 
-                new PointF(rect.Left, rect.Bottom),
-                new PointF(rect.Right, rect.Bottom),
-                new PointF(rect.Right, rect.Top),
-                new PointF(rect.Left, rect.Top)
-            };
+            Image<Gray, float> resultImg = new Image<Gray, float>(shuffled.Width - rect.Width + 1, shuffled.Height - rect.Height + 1);
+            System.IntPtr result = CvInvoke.cvCreateMat(resultImg.Height, resultImg.Width, Emgu.CV.CvEnum.MAT_DEPTH.CV_32F);
+            double[] min_val, max_val;
+            Point[] min_loc, max_loc;
             //
-            for (int t = 0; t < tiles.Length; t++)
+            for (int t = 0; t < tiles.Length - 1; t++)
             {
-                if (tiles[t].Length == 0) continue;
-                Features2DTracker tracker = new Features2DTracker(tiles[t]);
-                Features2DTracker.MatchedImageFeature[] matchedFeatures = tracker.MatchFeature(features, 2, 20);
-                matchedFeatures = Features2DTracker.VoteForUniqueness(matchedFeatures, 0.8);
-                matchedFeatures = Features2DTracker.VoteForSizeAndOrientation(matchedFeatures, 1.5, 20);
-                HomographyMatrix homography = Features2DTracker.GetHomographyMatrixFromMatchedFeatures(matchedFeatures);
+                CvInvoke.cvMatchTemplate(shuffled.Convert<Gray, byte>().SmoothGaussian(5), tiles[t].SmoothGaussian(5), result, TM_TYPE.CV_TM_CCORR_NORMED);
+                CvInvoke.cvCopy(result, resultImg, IntPtr.Zero);
+                resultImg.MinMax(out min_val, out max_val, out min_loc, out max_loc);
+                int best_i = ((int)(max_loc[0].Y + (rect.Height / 2 - 1)) / rect.Height) // row
+                             * board_size +  // 2D -> linear
+                             ((int)(max_loc[0].X + (rect.Width / 2 - 1)) / rect.Width);  // column
                 //
-                if (homography != null)
+                int tile_x = best_i % board_size;
+                int tile_y = best_i / board_size;
+                //
+                board_config[best_i] = t + 1;
+                //
+                Point[] pts = new Point[4]
                 {
-                    homography.ProjectPoints(pts);
-                    for (int i = 0; i < pts.Length; i++)
-                        pts[i].Y += rect.Height;
-                    //
-                    shuffled.DrawPolyline(Array.ConvertAll<PointF, Point>(pts, Point.Round), true, new Bgr(Color.Green), 2);
-                    //shuffled.Draw("1", ref font, new Point(50, 50), new Bgr(Color.Red));
-                }
+                    new Point(tile_x * rect.Width, tile_y * rect.Height),
+                    new Point((tile_x + 1) * rect.Width, tile_y * rect.Height),
+                    new Point((tile_x + 1) * rect.Width, (tile_y + 1) * rect.Height),
+                    new Point(tile_x * rect.Width, (tile_y + 1) * rect.Height)
+                };
+                shuffled.DrawPolyline(pts, true, new Bgr(Color.Green), 2);
+                shuffled.Draw(String.Format("{0,2:d}", t + 1), ref font,
+                    new Point((int)(((double)tile_x + 0.2) * rect.Width), (int)(((double)tile_y + 0.6) * rect.Height)),
+                    new Bgr(Color.Red));
             }
             //
             pictureBox2.Image = shuffled.ToBitmap();
             pictureBox2.Invalidate();
+            //
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < board_config.Length; i++)
+            {
+                if (((i % board_size) == 0) && (i > 0)) sb.AppendLine();
+                sb.AppendFormat("{0,2:d} ", board_config[i].ToString());
+            }
+            textBox1.Text = sb.ToString();
         }
     }
 }
