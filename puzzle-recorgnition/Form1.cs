@@ -103,32 +103,36 @@ namespace puzzle_recorgnition
             System.IntPtr result = CvInvoke.cvCreateMat(resultImg.Height, resultImg.Width, Emgu.CV.CvEnum.MAT_DEPTH.CV_32F);
             double[] min_val, max_val;
             Point[] min_loc, max_loc;
+            IdxPoint[] tiles_points = new IdxPoint[tiles.Length - 1];
             //
             for (int t = 0; t < tiles.Length - 1; t++)
             {
                 CvInvoke.cvMatchTemplate(shuffled.Convert<Gray, byte>().SmoothGaussian(5), tiles[t].SmoothGaussian(5), result, TM_TYPE.CV_TM_CCORR_NORMED);
                 CvInvoke.cvCopy(result, resultImg, IntPtr.Zero);
                 resultImg.MinMax(out min_val, out max_val, out min_loc, out max_loc);
-                int best_i = ((int)(max_loc[0].Y + (rect.Height / 2 - 1)) / rect.Height) // row
-                             * board_size +  // 2D -> linear
-                             ((int)(max_loc[0].X + (rect.Width / 2 - 1)) / rect.Width);  // column
-                //
-                int tile_x = best_i % board_size;
-                int tile_y = best_i / board_size;
-                //
-                board_config[best_i] = t + 1;
-                //
-                Point[] pts = new Point[4]
+                tiles_points[t] = new IdxPoint(max_loc[0], t + 1);
+            }
+            // relative positioning
+            var sorted_tiles_points = tiles_points.OrderBy(p => p.pt.Y);
+            for (int row = 0; row < board_size; row++)
+            {
+                IdxPoint[] row_tiles_points = sorted_tiles_points.Skip(row * board_size).Take(board_size).OrderBy(p => p.pt.X).ToArray();
+                for (int col = 0; col < row_tiles_points.Length; col++)
                 {
-                    new Point(tile_x * rect.Width, tile_y * rect.Height),
-                    new Point((tile_x + 1) * rect.Width, tile_y * rect.Height),
-                    new Point((tile_x + 1) * rect.Width, (tile_y + 1) * rect.Height),
-                    new Point(tile_x * rect.Width, (tile_y + 1) * rect.Height)
-                };
-                shuffled.DrawPolyline(pts, true, new Bgr(Color.Green), 2);
-                shuffled.Draw(String.Format("{0,2:d}", t + 1), ref font,
-                    new Point((int)(((double)tile_x + 0.2) * rect.Width), (int)(((double)tile_y + 0.6) * rect.Height)),
-                    new Bgr(Color.Red));
+                    board_config[row * board_size + col] = row_tiles_points[col].idx;
+                    //
+                    Point[] pts = new Point[4]
+                    {
+                        new Point(col * rect.Width, row * rect.Height),
+                        new Point((col + 1) * rect.Width, row * rect.Height),
+                        new Point((col + 1) * rect.Width, (row + 1) * rect.Height),
+                        new Point(col * rect.Width, (row + 1) * rect.Height)
+                    };
+                    shuffled.DrawPolyline(pts, true, new Bgr(Color.Green), 2);
+                    shuffled.Draw(String.Format("{0,2:d}", row_tiles_points[col].idx), ref font,
+                        new Point((int)(((double)col + 0.2) * rect.Width), (int)(((double)row + 0.6) * rect.Height)),
+                        new Bgr(Color.Red));
+                }
             }
             //
             pictureBox2.Image = shuffled.ToBitmap();
@@ -141,6 +145,18 @@ namespace puzzle_recorgnition
                 sb.AppendFormat("{0,2:d} ", board_config[i].ToString());
             }
             textBox1.Text = sb.ToString();
+        }
+
+        private class IdxPoint
+        {
+            public Point pt;
+            public int idx;
+
+            public IdxPoint(Point point, int index)
+            {
+                pt = point;
+                idx = index;
+            }
         }
     }
 }
