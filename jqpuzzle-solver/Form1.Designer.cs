@@ -275,7 +275,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label6.Location = new System.Drawing.Point(361, 11);
+            this.label6.Location = new System.Drawing.Point(350, 11);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(66, 20);
             this.label6.TabIndex = 15;
@@ -285,7 +285,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label5.Location = new System.Drawing.Point(314, 11);
+            this.label5.Location = new System.Drawing.Point(312, 11);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(41, 20);
             this.label5.TabIndex = 14;
@@ -331,9 +331,9 @@
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.label3.Location = new System.Drawing.Point(11, 11);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(297, 20);
+            this.label3.Size = new System.Drawing.Size(303, 20);
             this.label3.TabIndex = 10;
-            this.label3.Text = "Great choice! You are abou to solve";
+            this.label3.Text = "Great choice! You are about to solve";
             // 
             // label4
             // 
