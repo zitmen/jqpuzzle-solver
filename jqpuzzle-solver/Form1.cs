@@ -6,25 +6,33 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Net;
+using System.IO;
+
+using Emgu.Util;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using Emgu.CV.CvEnum;
 
 namespace jqpuzzle_solver
 {
     public partial class Form1 : Form
     {
+        private bool rbfIsBeingShown;
+        private ScreenCapture capture;
+        private BoardRecognition boardRecognition;
+
         public Form1()
         {
             InitializeComponent();
             InitForm();
+            //
+            capture = new ScreenCapture(this);
+            boardRecognition = null;
         }
 
         private void InitForm()
         {
-            // tabs
-            tabControl1.Enabled = true;
-            tabPage1.Enabled = true;
-            tabPage2.Enabled = false;
-            tabPage3.Enabled = false;
-            tabPage4.Enabled = false;
             // puzzle type
             radioButton2.Enabled = true;
             radioButton1.Enabled = true;
@@ -41,6 +49,8 @@ namespace jqpuzzle_solver
             textBox2.Enabled = false;
             textBox1.Enabled = false;
             pictureBox1.Enabled = false;
+            progressBar1.MarqueeAnimationSpeed = 0;
+            progressBar1.Visible = false;
             label5.Text = "NxN";
             // shuffled puzzle solver
             button6.Enabled = false;
@@ -55,29 +65,30 @@ namespace jqpuzzle_solver
             listBox1.Enabled = false;
             pictureBox3.Enabled = false;
             button7.Enabled = false;
-            button11.Enabled = false;
+            button11.Enabled = true;
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
         {
-            EnablePage2(3);
+            boardRecognition = new BoardRecognition(3);
+            EnablePage2();
         }
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
         {
-            EnablePage2(4);
+            boardRecognition = new BoardRecognition(4);
+            EnablePage2();
         }
 
-        private void EnablePage2(int n)
+        private void EnablePage2()
         {
             button1.Enabled = true;
-            tabPage2.Enabled = true;
             radioButton3.Enabled = true;
             radioButton4.Enabled = true;
             radioButton5.Enabled = true;
             pictureBox1.Enabled = true;
             button5.Enabled = true;
-            label5.Text = string.Format("{0:d}x{0:d}", n);
+            label5.Text = string.Format("{0:d}x{0:d}", boardRecognition.board_size);
             //
             if (radioButton3.Checked)
             {
@@ -142,7 +153,19 @@ namespace jqpuzzle_solver
 
         private void button3_Click(object sender, EventArgs e)
         {
-            // TODO: puzzle image - take a screenshot
+            if (rbfIsBeingShown) return;
+            rbfIsBeingShown = true;
+            this.Hide();
+            //
+            Image<Bgr, byte> original = new Image<Bgr, byte>(capture.ShowRubberBandForm());
+            pictureBox1.Image = original.ToBitmap();
+            //
+            this.Show();
+            rbfIsBeingShown = false;
+            //
+            boardRecognition.LearnTiles(original);
+            EnablePage3();
+            button2.Enabled = true;
         }
 
         private void radioButton3_CheckedChanged(object sender, EventArgs e)
@@ -157,13 +180,23 @@ namespace jqpuzzle_solver
 
         private void button4_Click(object sender, EventArgs e)
         {
-            // TODO: puzzle image - browse
+            OpenFileDialog Openfile = new OpenFileDialog();
+            if (Openfile.ShowDialog() == DialogResult.OK)
+            {
+                textBox1.Text = Openfile.FileName;
+                Image<Bgr, byte> original = new Image<Bgr, byte>(Openfile.FileName);
+                pictureBox1.Image = original.ToBitmap();
+                //
+                boardRecognition.LearnTiles(original);
+                EnablePage3();
+                button2.Enabled = true;
+            }
         }
 
         private void radioButton5_CheckedChanged(object sender, EventArgs e)
         {
             button10.Enabled = true;
-            textBox2.Enabled = true; 
+            textBox2.Enabled = true;
             //
             button3.Enabled = false;
             textBox1.Enabled = false;
@@ -172,7 +205,43 @@ namespace jqpuzzle_solver
 
         private void button10_Click(object sender, EventArgs e)
         {
-            // TODO: puzzle image - download
+            button10.Enabled = false;
+            progressBar1.MarqueeAnimationSpeed = 30;
+            progressBar1.Visible = true;
+            BackgroundWorker bgWork = new BackgroundWorker();
+            bgWork.DoWork += new DoWorkEventHandler(DownloadremoteImage);
+            bgWork.RunWorkerCompleted += new RunWorkerCompletedEventHandler(DownloadCompleted);
+            bgWork.RunWorkerAsync(textBox2.Text);
+        }
+
+        private void DownloadremoteImage(object sender, DoWorkEventArgs e)
+        {
+            WebClient client = new WebClient();
+            MemoryStream stream = new MemoryStream(client.DownloadData(new Uri((string)e.Argument)));
+            e.Result = new Image<Bgr, byte>(new Bitmap(stream));
+        }
+
+        private void DownloadCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Image<Bgr, byte> original = (Image<Bgr, byte>)e.Result;
+            pictureBox1.Image = original.ToBitmap();
+            progressBar1.Visible = false;
+            progressBar1.MarqueeAnimationSpeed = 0;
+            button10.Enabled = true;
+            //
+            boardRecognition.LearnTiles(original);
+            EnablePage3();
+            button2.Enabled = true;
+        }
+
+        public void EnablePage3()
+        {
+            button6.Enabled = true;
+            button8.Enabled = true;
+            button9.Enabled = true;
+            radioButton7.Enabled = true;
+            radioButton8.Enabled = true;
+            pictureBox2.Enabled = true;
         }
 
         private void radioButton8_CheckedChanged(object sender, EventArgs e)
@@ -187,7 +256,14 @@ namespace jqpuzzle_solver
 
         private void button8_Click(object sender, EventArgs e)
         {
-            // TODO: shuffled - screenshot
+            if (rbfIsBeingShown) return;
+            rbfIsBeingShown = true;
+            this.Hide();
+            //
+            pictureBox2.Image = capture.ShowRubberBandForm();
+            //
+            this.Show();
+            rbfIsBeingShown = false;
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
