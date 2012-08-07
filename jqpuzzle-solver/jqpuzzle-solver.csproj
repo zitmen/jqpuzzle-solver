@@ -112,6 +112,7 @@
   <ItemGroup>
     <Compile Include="Board.cs" />
     <Compile Include="BoardRecognition.cs" />
+    <Compile Include="BoardVisualizer.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

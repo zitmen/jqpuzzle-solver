@@ -96,6 +96,18 @@ namespace jqpuzzle_solver
             return board_config;
         }
 
+        public string ConfigToString()
+        {
+            Debug.Assert(board_config != null);
+            Debug.Assert(board_config.Length > 0);
+            //
+            StringBuilder config = new StringBuilder(board_config[0].ToString());
+            for (int i = 1; i < board_config.Length; i++)
+                config.AppendFormat(",{0:d}", board_config[i]);
+            //
+            return config.ToString();
+        }
+
         private void CheckBoardConfigValidity()
         {
             int[] cfg = new int[board_config.Length + 1];

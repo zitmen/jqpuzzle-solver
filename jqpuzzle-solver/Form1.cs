@@ -21,6 +21,8 @@ namespace jqpuzzle_solver
         private bool rbfIsBeingShown;
         private ScreenCapture capture;
         private BoardRecognition boardRecognition;
+        private Image<Bgr, byte>[] m_tiles;
+        private Image<Bgr, byte>[] m_path;
 
         public Form1()
         {
@@ -48,7 +50,6 @@ namespace jqpuzzle_solver
             radioButton5.Enabled = false;
             textBox2.Enabled = false;
             textBox1.Enabled = false;
-            pictureBox1.Enabled = false;
             progressBar1.MarqueeAnimationSpeed = 0;
             progressBar1.Visible = false;
             label5.Text = "NxN";
@@ -59,7 +60,6 @@ namespace jqpuzzle_solver
             radioButton7.Enabled = false;
             radioButton8.Enabled = false;
             textBox4.Enabled = false;
-            pictureBox2.Enabled = false;
             progressBar2.Visible = false;
             // solution
             label14.Text = "X";
@@ -86,7 +86,6 @@ namespace jqpuzzle_solver
             radioButton3.Enabled = true;
             radioButton4.Enabled = true;
             radioButton5.Enabled = true;
-            pictureBox1.Enabled = true;
             button5.Enabled = true;
             label5.Text = string.Format("{0:d}x{0:d}", boardRecognition.board_size);
             //
@@ -158,7 +157,8 @@ namespace jqpuzzle_solver
             this.Hide();
             //
             Image<Bgr, byte> original = new Image<Bgr, byte>(capture.ShowRubberBandForm());
-            pictureBox1.Image = original.ToBitmap();
+            m_tiles = BoardVisualizer.GetTiles(boardRecognition.board_size, original, pictureBox2.Width, pictureBox2.Height, false);
+            pictureBox1.Image = BoardVisualizer.OriginalBoardPreview(original, pictureBox1.Width, pictureBox1.Height, false).ToBitmap();
             //
             this.Show();
             rbfIsBeingShown = false;
@@ -185,7 +185,8 @@ namespace jqpuzzle_solver
             {
                 textBox1.Text = Openfile.FileName;
                 Image<Bgr, byte> original = new Image<Bgr, byte>(Openfile.FileName);
-                pictureBox1.Image = original.ToBitmap();
+                m_tiles = BoardVisualizer.GetTiles(boardRecognition.board_size, original, pictureBox2.Width, pictureBox2.Height, false);
+                pictureBox1.Image = BoardVisualizer.OriginalBoardPreview(original, pictureBox1.Width, pictureBox1.Height, false).ToBitmap();
                 //
                 boardRecognition.LearnTiles(original);
                 EnablePage3();
@@ -225,7 +226,8 @@ namespace jqpuzzle_solver
         private void DownloadCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Image<Bgr, byte> original = (Image<Bgr, byte>)e.Result;
-            pictureBox1.Image = original.ToBitmap();
+            m_tiles = BoardVisualizer.GetTiles(boardRecognition.board_size, original, pictureBox2.Width, pictureBox2.Height, false);
+            pictureBox1.Image = BoardVisualizer.OriginalBoardPreview(original, pictureBox1.Width, pictureBox1.Height, false).ToBitmap();
             progressBar1.Visible = false;
             progressBar1.MarqueeAnimationSpeed = 0;
             tabControl1.Enabled = true;
@@ -241,7 +243,6 @@ namespace jqpuzzle_solver
             button8.Enabled = true;
             radioButton7.Enabled = true;
             radioButton8.Enabled = true;
-            pictureBox2.Enabled = true;
         }
 
         private void radioButton8_CheckedChanged(object sender, EventArgs e)
@@ -267,7 +268,6 @@ namespace jqpuzzle_solver
             this.Hide();
             //
             Image<Bgr, byte> shuffled = new Image<Bgr, byte>(capture.ShowRubberBandForm());
-            pictureBox2.Image = shuffled.ToBitmap();
             //
             this.Show();
             rbfIsBeingShown = false;
@@ -275,6 +275,16 @@ namespace jqpuzzle_solver
             try
             {
                 boardRecognition.ClassifyTiles(shuffled);
+                //
+                textBox4.Text = boardRecognition.ConfigToString();
+                pictureBox2.Image = BoardVisualizer.ShuffledBoardPreview
+                (
+                    boardRecognition.board_size,
+                    boardRecognition.board_config,
+                    m_tiles,
+                    pictureBox2.Width, pictureBox2.Height
+                ).ToBitmap();
+                //
                 button9.Enabled = true;
             }
             catch (Exception ex)
@@ -288,6 +298,15 @@ namespace jqpuzzle_solver
             try
             {
                 boardRecognition.ReadConfiguration(textBox4.Text);
+                //
+                pictureBox2.Image = BoardVisualizer.ShuffledBoardPreview
+                (
+                    boardRecognition.board_size,
+                    boardRecognition.board_config,
+                    m_tiles,
+                    pictureBox2.Width, pictureBox2.Height
+                ).ToBitmap();
+                //
                 button9.Enabled = true;
             }
             catch (Exception ex)
@@ -331,9 +350,21 @@ namespace jqpuzzle_solver
             label14.Text = solution.path.Count.ToString();
             //
             string[] print_move = { "NONE", "RIGHT", "LEFT", "DOWN", "UP" };
+            m_path = new Image<Bgr, byte>[solution.path.Count];
+            // TODO: naklonovat boardRecognition.board_config do lokalni board_config
+            //       prochazet kroky a menit board_config + kreslit stav boardu + pridat sipku + moznost odstranit cisla a ramecky?
+            //       --> vrazit do vlakna
+            //
             for (int m = 0; m < solution.path.Count; m++)
             {
                 listBox1.Items.Add(string.Format("{0:d}. {1:s}", m + 1, print_move[(int)solution.path[m]]));
+                /*m_path[m] = BoardVisualizer.ShuffledBoardPreview
+                (
+                    boardRecognition.board_size,
+                    board_config,
+                    m_tiles,
+                    pictureBox3.Width, pictureBox3.Height
+                );*/
             }
         }
 
