@@ -15,7 +15,7 @@ namespace csharp_console_solver
         private Dictionary<UInt32, int>[] database;
         private UInt32[] est_hash;
 
-        public const  int BITS_PER_POS = 6;  // 0 - 15
+        public const  int BITS_PER_POS = 4;  // 0 - 15
         public const uint BIT_MASK = 15;     // upper bound of the BITS_PER_POS range
 
         public PatternDatabase(PuzzleType type)

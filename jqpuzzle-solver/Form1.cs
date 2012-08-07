@@ -60,10 +60,10 @@ namespace jqpuzzle_solver
             radioButton8.Enabled = false;
             textBox4.Enabled = false;
             pictureBox2.Enabled = false;
+            progressBar2.Visible = false;
             // solution
             label14.Text = "X";
             listBox1.Enabled = false;
-            pictureBox3.Enabled = false;
             button7.Enabled = false;
             button11.Enabled = true;
         }
@@ -128,7 +128,7 @@ namespace jqpuzzle_solver
 
         private void button9_Click(object sender, EventArgs e)
         {
-            tabControl1.SelectedIndex = 3;
+            RunSolver();
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -205,16 +205,17 @@ namespace jqpuzzle_solver
 
         private void button10_Click(object sender, EventArgs e)
         {
-            button10.Enabled = false;
             progressBar1.MarqueeAnimationSpeed = 30;
             progressBar1.Visible = true;
+            tabControl1.Enabled = false;
+            //
             BackgroundWorker bgWork = new BackgroundWorker();
-            bgWork.DoWork += new DoWorkEventHandler(DownloadremoteImage);
+            bgWork.DoWork += new DoWorkEventHandler(DownloadRemoteImage);
             bgWork.RunWorkerCompleted += new RunWorkerCompletedEventHandler(DownloadCompleted);
             bgWork.RunWorkerAsync(textBox2.Text);
         }
 
-        private void DownloadremoteImage(object sender, DoWorkEventArgs e)
+        private void DownloadRemoteImage(object sender, DoWorkEventArgs e)
         {
             WebClient client = new WebClient();
             MemoryStream stream = new MemoryStream(client.DownloadData(new Uri((string)e.Argument)));
@@ -227,7 +228,7 @@ namespace jqpuzzle_solver
             pictureBox1.Image = original.ToBitmap();
             progressBar1.Visible = false;
             progressBar1.MarqueeAnimationSpeed = 0;
-            button10.Enabled = true;
+            tabControl1.Enabled = true;
             //
             boardRecognition.LearnTiles(original);
             EnablePage3();
@@ -238,7 +239,6 @@ namespace jqpuzzle_solver
         {
             button6.Enabled = true;
             button8.Enabled = true;
-            button9.Enabled = true;
             radioButton7.Enabled = true;
             radioButton8.Enabled = true;
             pictureBox2.Enabled = true;
@@ -246,12 +246,18 @@ namespace jqpuzzle_solver
 
         private void radioButton8_CheckedChanged(object sender, EventArgs e)
         {
-            // TODO: shuffled - from screen
+            button8.Enabled = true;
+            //
+            textBox4.Enabled = false;
+            button12.Enabled = false;
         }
 
         private void radioButton7_CheckedChanged(object sender, EventArgs e)
         {
-            // TODO: shuffled manually
+            textBox4.Enabled = true;
+            button12.Enabled = true;
+            //
+            button8.Enabled = false;
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -260,15 +266,86 @@ namespace jqpuzzle_solver
             rbfIsBeingShown = true;
             this.Hide();
             //
-            pictureBox2.Image = capture.ShowRubberBandForm();
+            Image<Bgr, byte> shuffled = new Image<Bgr, byte>(capture.ShowRubberBandForm());
+            pictureBox2.Image = shuffled.ToBitmap();
             //
             this.Show();
             rbfIsBeingShown = false;
+            //
+            try
+            {
+                boardRecognition.ClassifyTiles(shuffled);
+                button9.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                boardRecognition.ReadConfiguration(textBox4.Text);
+                button9.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void RunSolver()
+        {
+            progressBar2.MarqueeAnimationSpeed = 30;
+            progressBar2.Visible = true;
+            tabControl1.Enabled = false;
+            //
+            BackgroundWorker bgWork = new BackgroundWorker();
+            bgWork.DoWork += new DoWorkEventHandler(SolvePuzzle);
+            bgWork.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PuzzleSolved);
+            bgWork.RunWorkerAsync();
+        }
+
+        private void SolvePuzzle(object sender, DoWorkEventArgs e)
+        {
+            PuzzleSolver puzzleSolver = new PuzzleSolver(boardRecognition.board_size);
+            e.Result = puzzleSolver.Solve(boardRecognition.board_config);
+        }
+
+        private void PuzzleSolved(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Solution solution = (Solution)e.Result;
+            PrepareResultsTab(solution);
+            //
+            progressBar2.Visible = false;
+            progressBar2.MarqueeAnimationSpeed = 0;
+            tabControl1.Enabled = true;
+            EnablePage4();
+            tabControl1.SelectedIndex = 3;
+        }
+
+        private void PrepareResultsTab(Solution solution)
+        {
+            label14.Text = solution.path.Count.ToString();
+            //
+            string[] print_move = { "NONE", "RIGHT", "LEFT", "DOWN", "UP" };
+            for (int m = 0; m < solution.path.Count; m++)
+            {
+                listBox1.Items.Add(string.Format("{0:d}. {1:s}", m + 1, print_move[(int)solution.path[m]]));
+            }
+        }
+
+        private void EnablePage4()
+        {
+            listBox1.Enabled = true;
+            button7.Enabled = true;
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // TODO: moves - switch to another move -> redraw the board and arrow
+            // TODO: moves
         }
     }
 }

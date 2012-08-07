@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using System.Diagnostics;
 
 using Emgu.Util;
 using Emgu.CV;
@@ -25,7 +26,6 @@ namespace jqpuzzle_solver
 
         public void LearnTiles(Image<Bgr, byte> original)
         {
-            // TODO: upravit, aby to fungovalo spravne!!
             this.original = original;
             //
             board_config = new int[board_size * board_size];
@@ -41,24 +41,19 @@ namespace jqpuzzle_solver
                 {
                     tile = original.GetSubRect(rect).Convert<Gray, byte>();
                     tiles[index] = tile;
-                    original.Draw(rect, new Bgr(Color.Red), 2);
                     //
                     rect.Offset(rect.Width, 0);
                 }
-                rect.Offset(-original.Width, rect.Height);
+                rect.Offset(-board_size * rect.Width, rect.Height);
             }
         }
 
-        public void ClassifyTiles(Image<Bgr, byte> shuffled)
+        public int[] ClassifyTiles(Image<Bgr, byte> shuffled)
         {
-            // TODO: upravit, aby to fungovalo spravne!!
-            //if (tiles == null) throw new Exception("bla bla");    // assert
+            Debug.Assert(this.tiles != null);
             //
             this.shuffled = shuffled;
             //
-            double[] tiles_dist = new double[tiles.Length];
-            //
-            MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 1.0, 1.0);
             Rectangle rect = new Rectangle(0, 0, original.Width / board_size, original.Height / board_size);
             Image<Gray, float> resultImg = new Image<Gray, float>(shuffled.Width - rect.Width + 1, shuffled.Height - rect.Height + 1);
             System.IntPtr result = CvInvoke.cvCreateMat(resultImg.Height, resultImg.Width, Emgu.CV.CvEnum.MAT_DEPTH.CV_32F);
@@ -79,40 +74,45 @@ namespace jqpuzzle_solver
             {
                 IdxPoint[] row_tiles_points = sorted_tiles_points.Skip(row * board_size).Take(board_size).OrderBy(p => p.pt.X).ToArray();
                 for (int col = 0; col < row_tiles_points.Length; col++)
-                {
                     board_config[row * board_size + col] = row_tiles_points[col].idx;
-                    //
-                    Point[] pts = new Point[4]
-                    {
-                        new Point(col * rect.Width, row * rect.Height),
-                        new Point((col + 1) * rect.Width, row * rect.Height),
-                        new Point((col + 1) * rect.Width, (row + 1) * rect.Height),
-                        new Point(col * rect.Width, (row + 1) * rect.Height)
-                    };
-                    shuffled.DrawPolyline(pts, true, new Bgr(Color.Green), 2);
-                    shuffled.Draw(String.Format("{0,2:d}", row_tiles_points[col].idx), ref font,
-                        new Point((int)(((double)col + 0.2) * rect.Width), (int)(((double)row + 0.6) * rect.Height)),
-                        new Bgr(Color.Red));
-                }
             }
             //
-            /*
-            pictureBox2.Image = shuffled.ToBitmap();
-            pictureBox2.Invalidate();
-            //
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < board_config.Length; i++)
-            {
-                if (((i % board_size) == 0) && (i > 0)) sb.AppendLine();
-                sb.AppendFormat("{0,2:d} ", board_config[i].ToString());
-            }
-            textBox1.Text = sb.ToString();
-            */
+            CheckBoardConfigValidity();
+            return board_config;
         }
 
-        public void ReadConfiguration(string config)
+        public int[] ReadConfiguration(string config)
         {
-            // TODO: implementovat parser rucniho zadani
+            board_config = new int[board_size * board_size];
+            int i = 0;
+            foreach (string str in config.Split(new char[1]{','}))
+            {
+                if (str.Trim() == string.Empty) continue;
+                board_config[i] = int.Parse(str.Trim());
+                if ((++i) >= board_config.Length) break;
+            }
+            //
+            CheckBoardConfigValidity();
+            return board_config;
+        }
+
+        private void CheckBoardConfigValidity()
+        {
+            int[] cfg = new int[board_config.Length + 1];
+            for (int i = 0; i < board_config.Length; i++)
+            {
+                if((board_config[i] >= 1) && (board_config[i] <= board_config.Length))
+                    cfg[board_config[i]] += 1;
+                else
+                    throw new Exception(string.Format("Invalid board configuration! Tile index out of range (1 - {0:d})!", board_config.Length));
+            }
+            //
+            for (int i = 1; i < cfg.Length; i++)
+                if(cfg[i] != 1)
+                    throw new Exception("Invalid board configuration! Each tile must appear exactly once!");
+            //
+            if (board_config[board_config.Length - 1] != board_config.Length)
+                throw new Exception("Invalid board configuration! Constraint: the empty tile has to be always in the bottom right corner!");
         }
 
         private class IdxPoint

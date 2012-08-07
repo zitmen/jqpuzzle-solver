@@ -7,12 +7,10 @@ namespace jqpuzzle_solver
     class ScreenCapture
     {
         private Form parentForm;
-        private bool rbfIsBeingShown;
-
+        
         public ScreenCapture(Form parent)
         {
             parentForm = parent;
-            rbfIsBeingShown = false;
         }
 
         public Bitmap ShowRubberBandForm()

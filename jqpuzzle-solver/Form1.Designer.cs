@@ -36,6 +36,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.button10 = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label7 = new System.Windows.Forms.Label();
@@ -53,6 +54,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.progressBar2 = new System.Windows.Forms.ProgressBar();
+            this.button12 = new System.Windows.Forms.Button();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.label8 = new System.Windows.Forms.Label();
             this.textBox4 = new System.Windows.Forms.TextBox();
@@ -73,7 +76,10 @@
             this.button11 = new System.Windows.Forms.Button();
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -164,6 +170,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.label19);
             this.tabPage2.Controls.Add(this.progressBar1);
             this.tabPage2.Controls.Add(this.button10);
             this.tabPage2.Controls.Add(this.pictureBox1);
@@ -188,6 +195,14 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Puzzle Image";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(72, 285);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(238, 10);
+            this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBar1.TabIndex = 25;
             // 
             // button10
             // 
@@ -227,7 +242,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(72, 177);
+            this.textBox1.Location = new System.Drawing.Point(72, 182);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(236, 20);
             this.textBox1.TabIndex = 20;
@@ -244,7 +259,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(314, 174);
+            this.button4.Location = new System.Drawing.Point(314, 179);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 18;
@@ -306,7 +321,7 @@
             // radioButton3
             // 
             this.radioButton3.AutoSize = true;
-            this.radioButton3.Location = new System.Drawing.Point(51, 149);
+            this.radioButton3.Location = new System.Drawing.Point(51, 154);
             this.radioButton3.Name = "radioButton3";
             this.radioButton3.Size = new System.Drawing.Size(70, 17);
             this.radioButton3.TabIndex = 12;
@@ -348,6 +363,11 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.label18);
+            this.tabPage3.Controls.Add(this.label17);
+            this.tabPage3.Controls.Add(this.label16);
+            this.tabPage3.Controls.Add(this.progressBar2);
+            this.tabPage3.Controls.Add(this.button12);
             this.tabPage3.Controls.Add(this.pictureBox2);
             this.tabPage3.Controls.Add(this.label8);
             this.tabPage3.Controls.Add(this.textBox4);
@@ -364,6 +384,24 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Shuffled Puzzle Solver";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // progressBar2
+            // 
+            this.progressBar2.Location = new System.Drawing.Point(512, 297);
+            this.progressBar2.Name = "progressBar2";
+            this.progressBar2.Size = new System.Drawing.Size(148, 10);
+            this.progressBar2.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBar2.TabIndex = 37;
+            // 
+            // button12
+            // 
+            this.button12.Location = new System.Drawing.Point(315, 185);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(75, 23);
+            this.button12.TabIndex = 36;
+            this.button12.Text = "Confirm";
+            this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.button12_Click);
             // 
             // pictureBox2
             // 
@@ -385,7 +423,7 @@
             // 
             // textBox4
             // 
-            this.textBox4.Location = new System.Drawing.Point(72, 177);
+            this.textBox4.Location = new System.Drawing.Point(72, 189);
             this.textBox4.Name = "textBox4";
             this.textBox4.Size = new System.Drawing.Size(236, 20);
             this.textBox4.TabIndex = 33;
@@ -423,7 +461,7 @@
             // radioButton7
             // 
             this.radioButton7.AutoSize = true;
-            this.radioButton7.Location = new System.Drawing.Point(51, 149);
+            this.radioButton7.Location = new System.Drawing.Point(51, 161);
             this.radioButton7.Name = "radioButton7";
             this.radioButton7.Size = new System.Drawing.Size(95, 17);
             this.radioButton7.TabIndex = 25;
@@ -570,13 +608,46 @@
             this.label13.TabIndex = 36;
             this.label13.Text = "Number of required moves: ";
             // 
-            // progressBar1
+            // label16
             // 
-            this.progressBar1.Location = new System.Drawing.Point(72, 285);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(238, 10);
-            this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
-            this.progressBar1.TabIndex = 25;
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label16.Location = new System.Drawing.Point(69, 212);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(246, 13);
+            this.label16.TabIndex = 38;
+            this.label16.Text = "Insert a comma separated list of tiles (1, 2, 3, 4, ...).";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label17.Location = new System.Drawing.Point(69, 225);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(323, 13);
+            this.label17.TabIndex = 39;
+            this.label17.Text = "Constraint: the empty tile has to be always last (bottom right corner)!";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label18.Location = new System.Drawing.Point(69, 122);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(382, 13);
+            this.label18.TabIndex = 40;
+            this.label18.Text = "This need not to be precise at all. You can select the whole screen, if you want." +
+    "";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label19.Location = new System.Drawing.Point(69, 122);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(175, 13);
+            this.label19.TabIndex = 26;
+            this.label19.Text = "This must be very precise selection!";
             // 
             // Form1
             // 
@@ -650,6 +721,12 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Button button10;
         private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Button button12;
+        private System.Windows.Forms.ProgressBar progressBar2;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label19;
     }
 }
 
