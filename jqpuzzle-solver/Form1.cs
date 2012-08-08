@@ -281,8 +281,7 @@ namespace jqpuzzle_solver
                 (
                     boardRecognition.board_size,
                     boardRecognition.board_config,
-                    m_tiles,
-                    pictureBox2.Width, pictureBox2.Height
+                    m_tiles
                 ).ToBitmap();
                 //
                 button9.Enabled = true;
@@ -303,8 +302,7 @@ namespace jqpuzzle_solver
                 (
                     boardRecognition.board_size,
                     boardRecognition.board_config,
-                    m_tiles,
-                    pictureBox2.Width, pictureBox2.Height
+                    m_tiles
                 ).ToBitmap();
                 //
                 button9.Enabled = true;
@@ -349,23 +347,21 @@ namespace jqpuzzle_solver
         {
             label14.Text = solution.path.Count.ToString();
             //
-            string[] print_move = { "NONE", "RIGHT", "LEFT", "DOWN", "UP" };
-            m_path = new Image<Bgr, byte>[solution.path.Count];
-            // TODO: naklonovat boardRecognition.board_config do lokalni board_config
-            //       prochazet kroky a menit board_config + kreslit stav boardu + pridat sipku + moznost odstranit cisla a ramecky?
-            //       --> vrazit do vlakna
+            Image<Bgr, byte>[] tiles = BoardVisualizer.GetTiles
+            (
+                boardRecognition.board_size, boardRecognition.original,
+                pictureBox3.Width, pictureBox3.Height, false
+            );
+            m_path = BoardVisualizer.VisualizeSolution
+            (
+                solution, boardRecognition.board_size,
+                boardRecognition.board_config, tiles
+            );
             //
+            string[] print_move = { "NONE", "RIGHT", "LEFT", "DOWN", "UP" };
             for (int m = 0; m < solution.path.Count; m++)
-            {
                 listBox1.Items.Add(string.Format("{0:d}. {1:s}", m + 1, print_move[(int)solution.path[m]]));
-                /*m_path[m] = BoardVisualizer.ShuffledBoardPreview
-                (
-                    boardRecognition.board_size,
-                    board_config,
-                    m_tiles,
-                    pictureBox3.Width, pictureBox3.Height
-                );*/
-            }
+            listBox1.Items.Add("(-: SOLVED :-)");
         }
 
         private void EnablePage4()
@@ -376,7 +372,7 @@ namespace jqpuzzle_solver
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // TODO: moves
+            pictureBox3.Image = m_path[listBox1.SelectedIndex].ToBitmap();
         }
     }
 }

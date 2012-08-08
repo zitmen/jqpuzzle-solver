@@ -39,9 +39,9 @@ namespace jqpuzzle_solver
             return tiles;
         }
 
-        public static Image<Bgr, byte> ShuffledBoardPreview(int board_size, int[] board_config, Image<Bgr, byte>[] tiles, int width, int height)
+        public static Image<Bgr, byte> ShuffledBoardPreview(int board_size, int[] board_config, Image<Bgr, byte>[] tiles)
         {
-            Image<Bgr, byte> shuffled = new Image<Bgr, byte>(width, height);
+            Image<Bgr, byte> shuffled = new Image<Bgr, byte>(board_size * tiles[0].Width, board_size * tiles[0].Height);
             Rectangle rect = new Rectangle(0, 0, tiles[0].Width, tiles[0].Height);
             MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.5, 0.5);
             //
@@ -62,6 +62,36 @@ namespace jqpuzzle_solver
             }
             //
             return shuffled;
+        }
+
+        public static Image<Bgr, byte>[] VisualizeSolution(Solution solution, int board_size, int[] starting_board_config, Image<Bgr, byte>[] tiles)
+        {
+            Image<Bgr, byte>[] img_path = new Image<Bgr, byte>[solution.path.Count + 1];
+            int[] board = (int[])starting_board_config.Clone();
+            int empty_i = board.Length - 1;
+            //
+            int i;
+            for (i = 0; i < solution.path.Count; i++)
+            {
+                img_path[i] = ShuffledBoardPreview(board_size, board, tiles);
+                switch (solution.path[i])
+                {
+                    case Direction.LEFT: Swap(board, empty_i - 1, empty_i); empty_i -= 1; break;
+                    case Direction.RIGHT: Swap(board, empty_i + 1, empty_i); empty_i += 1; break;
+                    case Direction.UP: Swap(board, empty_i - board_size, empty_i); empty_i -= board_size; break;
+                    case Direction.DOWN: Swap(board, empty_i + board_size, empty_i); empty_i += board_size; break;
+                }
+            }
+            img_path[i] = ShuffledBoardPreview(board_size, board, tiles);
+            //
+            return img_path;
+        }
+
+        private static void Swap(int[] arr, int i1, int i2)
+        {
+            int tmp = arr[i1];
+            arr[i1] = arr[i2];
+            arr[i2] = tmp;
         }
     }
 }
