@@ -372,6 +372,7 @@ namespace jqpuzzle_solver
                 boardRecognition.board_config, tiles
             );
             //
+            listBox1.Items.Clear();
             string[] print_move = { "NONE", "RIGHT", "LEFT", "DOWN", "UP" };
             for (int m = 0; m < solution.path.Count; m++)
                 listBox1.Items.Add(string.Format("{0:d}. {1:s}", m + 1, print_move[(int)solution.path[m]]));
