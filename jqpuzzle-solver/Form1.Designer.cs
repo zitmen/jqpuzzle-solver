@@ -36,6 +36,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label19 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.button10 = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
@@ -54,6 +55,9 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             this.progressBar2 = new System.Windows.Forms.ProgressBar();
             this.button12 = new System.Windows.Forms.Button();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
@@ -76,10 +80,6 @@
             this.button11 = new System.Windows.Forms.Button();
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -195,6 +195,16 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Puzzle Image";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label19.Location = new System.Drawing.Point(69, 122);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(175, 13);
+            this.label19.TabIndex = 26;
+            this.label19.Text = "This must be very precise selection!";
             // 
             // progressBar1
             // 
@@ -385,6 +395,37 @@
             this.tabPage3.Text = "Shuffled Puzzle Solver";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label18.Location = new System.Drawing.Point(69, 122);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(382, 13);
+            this.label18.TabIndex = 40;
+            this.label18.Text = "This need not to be precise at all. You can select the whole screen, if you want." +
+    "";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label17.Location = new System.Drawing.Point(69, 225);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(323, 13);
+            this.label17.TabIndex = 39;
+            this.label17.Text = "Constraint: the empty tile has to be always last (bottom right corner)!";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label16.Location = new System.Drawing.Point(69, 212);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(246, 13);
+            this.label16.TabIndex = 38;
+            this.label16.Text = "Insert a comma separated list of tiles (1, 2, 3, 4, ...).";
+            // 
             // progressBar2
             // 
             this.progressBar2.Location = new System.Drawing.Point(512, 297);
@@ -524,7 +565,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label11.Location = new System.Drawing.Point(308, 194);
+            this.label11.Location = new System.Drawing.Point(205, 193);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(23, 15);
             this.label11.TabIndex = 49;
@@ -533,7 +574,7 @@
             // listBox1
             // 
             this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(149, 108);
+            this.listBox1.Location = new System.Drawing.Point(33, 108);
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(149, 173);
             this.listBox1.TabIndex = 48;
@@ -543,7 +584,7 @@
             // 
             this.label15.AutoSize = true;
             this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label15.Location = new System.Drawing.Point(146, 91);
+            this.label15.Location = new System.Drawing.Point(30, 91);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(52, 15);
             this.label15.TabIndex = 47;
@@ -552,19 +593,20 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label14.Location = new System.Drawing.Point(221, 47);
+            this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label14.ForeColor = System.Drawing.Color.Green;
+            this.label14.Location = new System.Drawing.Point(134, 69);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(16, 15);
+            this.label14.Size = new System.Drawing.Size(25, 24);
             this.label14.TabIndex = 46;
             this.label14.Text = "X";
             // 
             // pictureBox3
             // 
             this.pictureBox3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox3.Location = new System.Drawing.Point(337, 91);
+            this.pictureBox3.Location = new System.Drawing.Point(239, 40);
             this.pictureBox3.Name = "pictureBox3";
-            this.pictureBox3.Size = new System.Drawing.Size(222, 190);
+            this.pictureBox3.Size = new System.Drawing.Size(335, 295);
             this.pictureBox3.TabIndex = 45;
             this.pictureBox3.TabStop = false;
             // 
@@ -602,52 +644,11 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label13.Location = new System.Drawing.Point(30, 45);
+            this.label13.Location = new System.Drawing.Point(30, 40);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(185, 15);
             this.label13.TabIndex = 36;
             this.label13.Text = "Number of required moves: ";
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label16.Location = new System.Drawing.Point(69, 212);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(246, 13);
-            this.label16.TabIndex = 38;
-            this.label16.Text = "Insert a comma separated list of tiles (1, 2, 3, 4, ...).";
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label17.Location = new System.Drawing.Point(69, 225);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(323, 13);
-            this.label17.TabIndex = 39;
-            this.label17.Text = "Constraint: the empty tile has to be always last (bottom right corner)!";
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label18.Location = new System.Drawing.Point(69, 122);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(382, 13);
-            this.label18.TabIndex = 40;
-            this.label18.Text = "This need not to be precise at all. You can select the whole screen, if you want." +
-    "";
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label19.Location = new System.Drawing.Point(69, 122);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(175, 13);
-            this.label19.TabIndex = 26;
-            this.label19.Text = "This must be very precise selection!";
             // 
             // Form1
             // 

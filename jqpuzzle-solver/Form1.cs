@@ -156,7 +156,14 @@ namespace jqpuzzle_solver
             rbfIsBeingShown = true;
             this.Hide();
             //
-            Image<Bgr, byte> original = new Image<Bgr, byte>(capture.ShowRubberBandForm());
+            Bitmap bmp = capture.ShowRubberBandForm();
+            if (bmp == null)
+            {
+                this.Show();
+                rbfIsBeingShown = false;
+                return;
+            }
+            Image<Bgr, byte> original = new Image<Bgr, byte>(bmp);
             m_tiles = BoardVisualizer.GetTiles(boardRecognition.board_size, original, pictureBox2.Width, pictureBox2.Height, false);
             pictureBox1.Image = BoardVisualizer.OriginalBoardPreview(original, pictureBox1.Width, pictureBox1.Height, false).ToBitmap();
             //
@@ -267,7 +274,14 @@ namespace jqpuzzle_solver
             rbfIsBeingShown = true;
             this.Hide();
             //
-            Image<Bgr, byte> shuffled = new Image<Bgr, byte>(capture.ShowRubberBandForm());
+            Bitmap bmp = capture.ShowRubberBandForm();
+            if (bmp == null)
+            {
+                this.Show();
+                rbfIsBeingShown = false;
+                return;
+            }
+            Image<Bgr, byte> shuffled = new Image<Bgr, byte>(bmp);
             //
             this.Show();
             rbfIsBeingShown = false;
@@ -362,6 +376,8 @@ namespace jqpuzzle_solver
             for (int m = 0; m < solution.path.Count; m++)
                 listBox1.Items.Add(string.Format("{0:d}. {1:s}", m + 1, print_move[(int)solution.path[m]]));
             listBox1.Items.Add("(-: SOLVED :-)");
+            //
+            listBox1.SelectedIndex = 0;
         }
 
         private void EnablePage4()

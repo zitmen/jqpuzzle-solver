@@ -157,43 +157,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="cvextern.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_calib3d220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_contrib220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_core220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_features2d220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_flann220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_gpu220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_highgui220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_imgproc220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_legacy220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_ml220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_objdetect220.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="opencv_video220.dll">
+    <Content Include="arrow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="puzzle.ico" />
@@ -221,6 +185,21 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\cvextern.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_calib3d220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_contrib220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_core220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_features2d220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_flann220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_gpu220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_highgui220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_imgproc220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_legacy220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_ml220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_objdetect220.dll $(ProjectDir)$(OutDir);
+copy $(ProjectDir)..\emgucv_bin\windows-$(PlatformName)\opencv_video220.dll $(ProjectDir)$(OutDir);</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
